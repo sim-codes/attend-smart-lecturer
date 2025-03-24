@@ -18,8 +18,9 @@ export const authService = {
 
 export const studentService = {
   async getAllStudents(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
     return ServiceHandler.execute(() =>
-      apiClient.get(API_ENDPOINTS.student.getAll, { params })
+      apiClient.get(`${API_ENDPOINTS.student.getAll}?${queryString}`)
     );
   }
 }
