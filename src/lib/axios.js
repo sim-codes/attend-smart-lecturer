@@ -1,6 +1,7 @@
 import axios from "axios";
 import { API_ENDPOINTS, PUBLIC_ENDPOINTS } from "@/app/constants/endpoint";
 import { API_CONFIG } from "@/app/constants/config";
+import { authUtils } from "./utils";
 
 class ApiClient{
   _client;
@@ -26,7 +27,8 @@ class ApiClient{
         );
 
         if (!isPublicEndpoint) {
-          const accessToken = localStorage.getItem("token");
+          const tokens = await authUtils.getTokens();
+          const accessToken = tokens.accessToken;
 
           if (accessToken) {
             config.headers.Authorization = `Bearer ${accessToken}`;

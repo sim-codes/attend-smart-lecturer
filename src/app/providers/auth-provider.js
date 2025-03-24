@@ -12,12 +12,12 @@ export function AuthProvider({ children }) {
   const router = useRouter();
 
   useEffect(() => {
-    loadUserData();
+    // loadUserData();
   }, []);
 
-  const loadUserData = async (userData) => {
-    await authUtils.setUserData(userData);
-    setUser(userData);
+  const loadUserData = async () => {
+    const data = await authUtils.getUserData();
+    setUser(data);
   };
 
 

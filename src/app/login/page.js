@@ -123,7 +123,7 @@ export default function Page() {
 
       if (result.success) {
         Promise.all([
-          authUtils.setUserData(result.data.userData),
+          authUtils.setUserData(result.data.user),
           authUtils.setTokens(result.data.token)
         ]).then(() => {
           router.push('/dashboard');

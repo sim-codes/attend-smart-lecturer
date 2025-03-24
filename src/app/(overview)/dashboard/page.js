@@ -1,14 +1,29 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { authUtils } from "@/lib/utils";
+import { studentService } from "@/lib/services";
 
 export default function Dashboard() {
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const [user, setUser] = useState(null);
 
-  const handleLogout = () => {
-    // Implement the logout logic
+  useEffect(() => {
+    if (!students.length) {
+      loadStudents();
+    }
+  }, []);
 
+  const loadStudents = async () => {
+    const response = await studentService.getAllStudents();
+    if (response.success) {
+      setStudents(response.data.students);
+    }
+  }
+
+  const handleLogout = async () => {
+    await authUtils.clearAuth();
     router.push("/");
   };
 
@@ -31,8 +46,6 @@ export default function Dashboard() {
           </div>
         </div>
       </nav>
-
-      
     </div>
   );
 }

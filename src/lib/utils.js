@@ -1,6 +1,6 @@
 export const authUtils = {
     setUserData: async (userData) => {
-        await cookieStore.set('userData', JSON.stringify(userData), {
+        await cookieStore.set('user', JSON.stringify(userData), {
             secure: true,
             sameSite: 'strict',
             maxAge: 60 * 60 * 24 * 7,
@@ -27,7 +27,7 @@ export const authUtils = {
     },
 
     getUserData: async () => {
-        const userDataCookie = await cookieStore.get('userData');
+        const userDataCookie = await cookieStore.get('user');
         return userDataCookie ? JSON.parse(userDataCookie.value) : null;
     },
 
@@ -54,7 +54,7 @@ export const authUtils = {
     },
 
     clearAuth: async () => {
-        await cookieStore.delete('userData');
+        await cookieStore.delete('user');
         await cookieStore.delete('accessToken');
         await cookieStore.delete('refreshToken');
     }

@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
-import { authUtils } from "./lib/utils";
+import { cookies } from "next/headers";
 
 export async function middleware(request) {
-  const user = await authUtils;
+  const cookieStore = await cookies();
+  const user = cookieStore.get("user");
 
   if (!user && request.nextUrl.pathname.startsWith("/dashboard")) {
     return NextResponse.redirect(new URL("/login", request.url));

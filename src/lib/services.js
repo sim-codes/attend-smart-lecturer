@@ -15,3 +15,11 @@ export const authService = {
     );
   }
 }
+
+export const studentService = {
+  async getAllStudents(params = {}) {
+    return ServiceHandler.execute(() =>
+      apiClient.get(API_ENDPOINTS.student.getAll, { params })
+    );
+  }
+}
