@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
+import { authUtils } from "./lib/utils";
 
 export async function middleware(request) {
-  const token = await getToken({ req: request });
+  const user = await authUtils;
 
-  if (!token && request.nextUrl.pathname.startsWith("/dashboard")) {
-    return NextResponse.redirect(new URL("/", request.url));
+  if (!user && request.nextUrl.pathname.startsWith("/dashboard")) {
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
   return NextResponse.next();

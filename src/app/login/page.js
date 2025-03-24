@@ -18,6 +18,9 @@ import { colorPalette } from '../constants/color';
 import Card from '../components/card';
 import ForgotPassword from '../components/forgot-password';
 import StyledButton from '../components/button';
+import { authService } from '@/lib/services';
+import { authUtils } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
 const SignInContainer = styled(Stack)(({ theme }) => ({
   height: '100vh',
@@ -75,14 +78,15 @@ const StyledDivider = styled(Divider)({
 });
 
 const schema = z.object({
-  email: z.string().email('Please enter a valid email address.'),
-  password: z.string().min(6, 'Password must be at least 6 characters long.')
+  username: z.string().min(6, 'Username must be at least 6 characters long.'),
+  password: z.string().min(8, 'Password must be at least 8 characters long.')
 });
 
 export default function Page() {
-  const [errors, setErrors] = useState({ email: '', password: '' });
+  const [errors, setErrors] = useState({ username: '', password: '', message: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const router = useRouter();
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -92,11 +96,11 @@ export default function Page() {
     setOpen(false);
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const formData = {
-      email: data.get('email'),
+      username: data.get('username'),
       password: data.get('password')
     };
 
@@ -104,22 +108,33 @@ export default function Page() {
     if (!validation.success) {
       const fieldErrors = validation.error.format();
       setErrors({
-        email: fieldErrors.email?._errors[0] || '',
+        username: fieldErrors.username?._errors[0] || '',
         password: fieldErrors.password?._errors[0] || ''
       });
       return;
     }
-    
+
     // Clear any previous errors
-    setErrors({ email: '', password: '' });
-    
-    // Set loading state and simulate an async action
+    setErrors({ username: '', password: '' });
     setIsLoading(true);
-    // Simulating API call delay
-    setTimeout(() => {
-      console.log(formData);
+
+    try {
+      const result = await authService.login(formData);
+
+      if (result.success) {
+        Promise.all([
+          authUtils.setUserData(result.data.userData),
+          authUtils.setTokens(result.data.token)
+        ]).then(() => {
+          router.push('/dashboard');
+        });
+      }
+    } catch (error) {
+      setErrors({ message: error?.message || 'An error occurred. Please try again.' });
+    } finally {
       setIsLoading(false);
-    }, 2000);
+    }
+    return;
   };
 
   return (
@@ -151,25 +166,38 @@ export default function Page() {
           >
             Sign in to continue to your account
           </Typography>
-          
+
+          { errors.message && (
+            <Typography
+              variant="body2"
+              sx={{
+                textAlign: 'center',
+                color: colorPalette.text.error,
+                marginBottom: '16px'
+              }}
+            >
+              {errors.message}
+            </Typography>
+          )}
+
+
           <Box component="form" onSubmit={handleSubmit} noValidate sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 2.5 }}>
             <FormControl>
-              <StyledFormLabel htmlFor="email">Email</StyledFormLabel>
+              <StyledFormLabel htmlFor="username">Username</StyledFormLabel>
               <StyledTextField
-                error={!!errors.email}
-                helperText={errors.email}
-                id="email"
-                type="email"
-                name="email"
-                placeholder="your@email.com"
-                autoComplete="email"
+                error={!!errors.username}
+                helperText={errors.username}
+                id="username"
+                type="text"
+                name="username"
+                placeholder="Simcodes"
                 required
                 fullWidth
                 variant="outlined"
                 size="medium"
               />
             </FormControl>
-            
+
             <FormControl>
               <StyledFormLabel htmlFor="password">Password</StyledFormLabel>
               <StyledTextField
@@ -186,26 +214,9 @@ export default function Page() {
                 size="medium"
               />
             </FormControl>
-            
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <FormControlLabel 
-                control={
-                  <Checkbox 
-                    value="remember" 
-                    sx={{ 
-                      color: colorPalette.text.secondary,
-                      '&.Mui-checked': {
-                        color: colorPalette.primary.main,
-                      }
-                    }} 
-                  />
-                } 
-                label="Remember me" 
-                sx={{ color: colorPalette.text.secondary }}
-              />
-              <ForgotPassword open={open} handleClose={handleClose} />
-            </Box>
-            
+
+            <ForgotPassword open={ open } handleClose={ handleClose } />
+
             <StyledButton type="submit" fullWidth variant="contained" disabled={isLoading}>
               {isLoading ? "Signing in…" : "Sign in"}
             </StyledButton>

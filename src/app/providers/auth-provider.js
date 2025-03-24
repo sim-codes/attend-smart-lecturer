@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { authUtils } from "@/lib/utils";
 
 const AuthContext = createContext();
 
@@ -11,16 +12,18 @@ export function AuthProvider({ children }) {
   const router = useRouter();
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
+    loadUserData();
   }, []);
+
+  const loadUserData = async (userData) => {
+    await authUtils.setUserData(userData);
+    setUser(userData);
+  };
 
 
   const value = {
     user,
+    setUser,
     loading,
     isAuthenticated: !!user,
   };
