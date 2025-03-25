@@ -27,7 +27,6 @@ export default function Signup() {
 
     try {
       const response = await axios.post(`${API_URL}/authentication`, formData);
-      console.log(response);
 
       if (response.status === 201 || response.status === 200) {
         setSuccess("Account created successfully! Please log in.");

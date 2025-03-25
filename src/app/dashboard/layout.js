@@ -5,11 +5,12 @@ import { Box, Toolbar, CssBaseline, AppBar, Typography, useTheme, useMediaQuery,
 import Sidebar from '../components/sidebar';
 import { useRouter } from "next/navigation";
 import { authUtils } from "@/lib/utils";
+import TopBar from '../components/topbar';
 
 const drawerWidth = 240;
 
 export default function DashboardLayout({ children }) {
-    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [sidebarOpen, setSidebarOpen] = useState(true);
     const theme = useTheme();
     const router = useRouter();
 
@@ -38,7 +39,10 @@ export default function DashboardLayout({ children }) {
                     }),
                 }}
             >
-                <Toolbar sx={{position: 'relative'}}>
+                <CssBaseline />
+                <TopBar open={sidebarOpen} onToggle={handleSidebarToggle} />
+                <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} onToggle={handleSidebarToggle} />
+                {/* <Toolbar sx={{position: 'relative'}}>
                     <Sidebar
                         open={ sidebarOpen }
                         setOpen={ setSidebarOpen }
@@ -53,7 +57,7 @@ export default function DashboardLayout({ children }) {
                     >
                         Logout
                     </Button>
-                </Toolbar>
+                </Toolbar> */}
             </AppBar>
             <Box
                 component="main"

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { authUtils } from "@/lib/utils";
 import { studentService, departmentService } from "@/lib/services";
 import { 
@@ -30,7 +31,15 @@ import {
   Divider,
   Button,
   useMediaQuery,
-  useTheme
+  useTheme,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -39,14 +48,15 @@ import {
   Phone as PhoneIcon,
   School as SchoolIcon,
   AccountBalance as DepartmentIcon,
-  Badge as BadgeIcon
+  Badge as BadgeIcon,
+  Close as CloseIcon,
+  Assignment as ReportIcon
 } from '@mui/icons-material';
 
 export default function Dashboard() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [department, setDepartment] = useState([]);
   const [departmentId, setDepartmentId] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -58,18 +68,17 @@ export default function Dashboard() {
     hasPrevious: false,
     hasNext: false
   });
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [departments, setDepartments] = useState([]);
 
   const router = useRouter();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-  // Available departments derived from student data
-  const [departments, setDepartments] = useState([]);
-
   useEffect(() => {
     loadStudents();
     loadDepartments();
-  }, [page, rowsPerPage, department]);
+  }, [page, rowsPerPage, departmentId]); // Added departmentId to dependencies
 
   const loadDepartments = async () => {
     try {
@@ -78,9 +87,9 @@ export default function Dashboard() {
         setDepartments(response.data);
       }
     } catch (err) {
-      console.erro('Failed to load departments', err);
+      console.error('Failed to load departments', err);
     }
-  }
+  };
 
   const loadStudents = async () => {
     setLoading(true);
@@ -97,9 +106,6 @@ export default function Dashboard() {
       if (response.success) {
         setStudents(response.data.students);
         setMetadata(response.data.metadata);
-        // Extract unique departments for the filter
-        // const uniqueDepartments = [...new Set(response.data.students.map(student => student.department))];
-        // setDepartments(uniqueDepartments);
       }
     } catch (error) {
       console.error("Failed to load students:", error);
@@ -108,9 +114,23 @@ export default function Dashboard() {
     }
   };
 
+  const handleStudentClick = (student) => {
+    setSelectedStudent(student);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedStudent(null);
+  };
+
   const handleSearch = () => {
     setPage(0);
     loadStudents();
+  };
+
+  const handleDepartmentChange = (e) => {
+    setDepartmentId(e.target.value);
+    setPage(0); // Reset to first page when department changes
+    // No need to call loadStudents here - useEffect will trigger it
   };
 
   const handleChangePage = (event, newPage) => {
@@ -122,7 +142,6 @@ export default function Dashboard() {
     setPage(0);
   };
 
-  // Dashboard stats cards
   const StatsCard = ({ title, value, icon }) => (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CardContent sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -204,7 +223,7 @@ export default function Dashboard() {
               <Select
                 value={departmentId}
                 label="Department"
-                onChange={(e) => setDepartmentId(e.target.value)}
+                onChange={handleDepartmentChange}
               >
                 <MenuItem value="">All Departments</MenuItem>
                 {departments.map((dept) => (
@@ -231,7 +250,11 @@ export default function Dashboard() {
             // Mobile card view
             <Box sx={{ mb: 3 }}>
               {students.map((student) => (
-                <Card key={student.userId} sx={{ mb: 2 }}>
+                <Card 
+                  key={student.userId} 
+                  sx={{ mb: 2, cursor: 'pointer' }}
+                  onClick={() => handleStudentClick(student)}
+                >
                   <CardContent>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                       <Avatar 
@@ -244,34 +267,9 @@ export default function Dashboard() {
                         <Typography variant="h6">
                           {student.firstName} {student.lastName}
                         </Typography>
-                        <Chip
-                          label={student.level}
-                          color="primary"
-                          size="small"
-                          sx={{ mr: 1 }}
-                        />
-                        <Chip
-                          label={student.department}
-                          color="secondary"
-                          size="small"
-                        />
-                      </Box>
-                    </Box>
-                    
-                    <Divider sx={{ my: 1 }} />
-                    
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <BadgeIcon sx={{ mr: 1, color: 'text.secondary' }} fontSize="small" />
-                        <Typography variant="body2">{student.matriculationNumber}</Typography>
-                      </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <EmailIcon sx={{ mr: 1, color: 'text.secondary' }} fontSize="small" />
-                        <Typography variant="body2">{student.email}</Typography>
-                      </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <PhoneIcon sx={{ mr: 1, color: 'text.secondary' }} fontSize="small" />
-                        <Typography variant="body2">{student.phoneNumber}</Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {student.matriculationNumber}
+                        </Typography>
                       </Box>
                     </Box>
                   </CardContent>
@@ -286,15 +284,17 @@ export default function Dashboard() {
                   <TableRow>
                     <TableCell>Student</TableCell>
                     <TableCell>Matric Number</TableCell>
-                    <TableCell>Level</TableCell>
-                    <TableCell>Department</TableCell>
                     <TableCell>Email</TableCell>
-                    <TableCell>Phone</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {students.map((student) => (
-                    <TableRow key={student.userId}>
+                    <TableRow 
+                      key={student.userId} 
+                      hover 
+                      sx={{ cursor: 'pointer' }}
+                      onClick={() => handleStudentClick(student)}
+                    >
                       <TableCell>
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                           <Avatar src={student.profileImageUrl} sx={{ mr: 2 }}>
@@ -306,14 +306,7 @@ export default function Dashboard() {
                         </Box>
                       </TableCell>
                       <TableCell>{student.matriculationNumber}</TableCell>
-                      <TableCell>
-                        <Chip label={student.level} color="primary" size="small" />
-                      </TableCell>
-                      <TableCell>
-                        <Chip label={student.department} color="secondary" size="small" />
-                      </TableCell>
                       <TableCell>{student.email}</TableCell>
-                      <TableCell>{student.phoneNumber}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -333,6 +326,119 @@ export default function Dashboard() {
           />
         </>
       )}
+
+      {/* Student Details Modal */}
+      <Dialog
+        open={!!selectedStudent}
+        onClose={handleCloseModal}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Typography variant="h6">
+              {selectedStudent?.firstName} {selectedStudent?.lastName}'s Profile
+            </Typography>
+            <IconButton onClick={handleCloseModal}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent dividers>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={4}>
+              <Box display="flex" flexDirection="column" alignItems="center" p={2}>
+                <Avatar
+                  src={selectedStudent?.profileImageUrl}
+                  sx={{
+                    width: 150,
+                    height: 150,
+                    mb: 3,
+                    border: `4px solid ${theme.palette.primary.main}`
+                  }}
+                >
+                  {selectedStudent?.firstName?.charAt(0)}{selectedStudent?.lastName?.charAt(0)}
+                </Avatar>
+                <Typography variant="h6" gutterBottom>
+                  {selectedStudent?.firstName} {selectedStudent?.lastName}
+                </Typography>
+                <Chip
+                  label={selectedStudent?.department || 'Not provided'}
+                  color="primary"
+                  sx={{ mb: 1 }}
+                />
+              </Box>
+            </Grid>
+            <Grid item xs={12} md={8}>
+              <List sx={ { width: '100%' } }>
+              <ListItem sx={{ px: 0 }}>
+                  <ListItemIcon sx={{ minWidth: 40 }}>
+                    <BadgeIcon color="primary" />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="Matric Number"
+                    secondary={selectedStudent?.matriculationNumber || 'Not provided'}
+                    secondaryTypographyProps={{ variant: 'body1' }}
+                  />
+                </ListItem>
+                <Divider component="li" />
+
+                <ListItem sx={{ px: 0 }}>
+                  <ListItemIcon sx={{ minWidth: 40 }}>
+                    <BadgeIcon color="primary" />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="Level"
+                    secondary={selectedStudent?.level || 'Not provided'}
+                    secondaryTypographyProps={{ variant: 'body1' }}
+                  />
+                </ListItem>
+                <Divider component="li" />
+
+                <ListItem sx={{ px: 0 }}>
+                  <ListItemIcon sx={{ minWidth: 40 }}>
+                    <EmailIcon color="primary" />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="Email"
+                    secondary={selectedStudent?.email || 'Not provided'}
+                    secondaryTypographyProps={{ variant: 'body1' }}
+                  />
+                </ListItem>
+                <Divider component="li" />
+                
+                <ListItem sx={{ px: 0 }}>
+                  <ListItemIcon sx={{ minWidth: 40 }}>
+                    <PhoneIcon color="primary" />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="Phone Number"
+                    secondary={selectedStudent?.phoneNumber || 'Not provided'}
+                    secondaryTypographyProps={{ variant: 'body1' }}
+                  />
+                </ListItem>
+              </List>
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: 'space-between', px: 3, py: 2 }}>
+          <Button
+            component={Link}
+            href={`/attendance/${selectedStudent?.userId}`}
+            variant="outlined"
+            startIcon={<ReportIcon />}
+          >
+            View Attendance Report
+          </Button>
+          <Button 
+            onClick={handleCloseModal} 
+            color="primary"
+            variant="contained"
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
