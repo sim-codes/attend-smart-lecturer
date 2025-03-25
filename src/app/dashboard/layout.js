@@ -10,7 +10,7 @@ import TopBar from '../components/topbar';
 const drawerWidth = 240;
 
 export default function DashboardLayout({ children }) {
-    const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
     const theme = useTheme();
     const router = useRouter();
 

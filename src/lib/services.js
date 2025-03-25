@@ -46,16 +46,6 @@ export const studentService = {
     return ServiceHandler.execute(() =>
       apiClient.get(API_ENDPOINTS.student.getSingle(id))
     );
-  },
-  async createStudent(id, studentData) {
-    return ServiceHandler.execute(() =>
-      apiClient.post(API_ENDPOINTS.student.create(id), studentData)
-    );
-  },
-  async updateStudent(id, studentData) {
-    return ServiceHandler.execute(() =>
-      apiClient.put(API_ENDPOINTS.student.update(id), studentData)
-    );
   }
 }
 

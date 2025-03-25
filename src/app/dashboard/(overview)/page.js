@@ -161,7 +161,7 @@ export default function Dashboard() {
   );
 
   return (
-    <Box sx={{ bgcolor: '#f5f5f5', minHeight: '100vh', p: 3 }}>
+    <Box sx={{ minHeight: '100vh', p: 3 }}>
       {/* Dashboard Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexDirection: isMobile ? 'column' : 'row', gap: 2 }}>
         <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>

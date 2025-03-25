@@ -76,7 +76,6 @@ const Sidebar = ({ open, setOpen, onToggle }) => {
         { text: 'Lecturers', icon: <GroupIcon />, path: '/dashboard/lecturers' },
         { text: 'Courses', icon: <AssignmentIcon />, path: '/dashboard/courses' },
         { text: 'Class Schedules', icon: <SchoolIcon />, path: '/dashboard/class-schedules' },
-        { text: 'Attendance Reports', icon: <FileIcon />, path: '/dashboard/attendance-reports' },
     ];
 
     const lecturerNavItems = [
