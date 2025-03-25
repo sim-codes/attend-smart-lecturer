@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { authUtils } from "@/lib/utils";
-import { studentService } from "@/lib/services";
+import { studentService, departmentService } from "@/lib/services";
 import { 
   Box, 
   Card, 
@@ -32,8 +32,8 @@ import {
   useMediaQuery,
   useTheme
 } from '@mui/material';
-import { 
-  Search as SearchIcon, 
+import {
+  Search as SearchIcon,
   Person as PersonIcon,
   Email as EmailIcon,
   Phone as PhoneIcon,
@@ -46,7 +46,8 @@ export default function Dashboard() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [department, setDepartment] = useState('');
+  const [department, setDepartment] = useState([]);
+  const [departmentId, setDepartmentId] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [metadata, setMetadata] = useState({
@@ -57,7 +58,7 @@ export default function Dashboard() {
     hasPrevious: false,
     hasNext: false
   });
-  
+
   const router = useRouter();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -67,7 +68,19 @@ export default function Dashboard() {
 
   useEffect(() => {
     loadStudents();
+    loadDepartments();
   }, [page, rowsPerPage, department]);
+
+  const loadDepartments = async () => {
+    try {
+      const response = await departmentService.getAllDepartments();
+      if (response.success) {
+        setDepartments(response.data);
+      }
+    } catch (err) {
+      console.erro('Failed to load departments', err);
+    }
+  }
 
   const loadStudents = async () => {
     setLoading(true);
@@ -76,7 +89,7 @@ export default function Dashboard() {
         pageNumber: page + 1,
         pageSize: rowsPerPage,
         searchTerm: searchTerm,
-        departmentId: department || ''
+        departmentId: departmentId
       };
 
       const response = await studentService.getAllStudents(params);
@@ -85,8 +98,8 @@ export default function Dashboard() {
         setStudents(response.data.students);
         setMetadata(response.data.metadata);
         // Extract unique departments for the filter
-        const uniqueDepartments = [...new Set(response.data.students.map(student => student.department))];
-        setDepartments(uniqueDepartments);
+        // const uniqueDepartments = [...new Set(response.data.students.map(student => student.department))];
+        // setDepartments(uniqueDepartments);
       }
     } catch (error) {
       console.error("Failed to load students:", error);
@@ -96,7 +109,7 @@ export default function Dashboard() {
   };
 
   const handleSearch = () => {
-    setPage(0); // Reset to first page when searching
+    setPage(0);
     loadStudents();
   };
 
@@ -107,11 +120,6 @@ export default function Dashboard() {
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
-  };
-
-  const handleLogout = async () => {
-    await authUtils.clearAuth();
-    router.push("/");
   };
 
   // Dashboard stats cards
@@ -138,45 +146,24 @@ export default function Dashboard() {
       {/* Dashboard Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexDirection: isMobile ? 'column' : 'row', gap: 2 }}>
         <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
-          Students Dashboard
+          Students
         </Typography>
-        <Button
-          variant="contained"
-          color="error"
-          onClick={handleLogout}
-        >
-          Logout
-        </Button>
       </Box>
 
       {/* Stats Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatsCard 
-            title="Total Students" 
-            value={metadata.totalCount} 
-            icon={<PersonIcon />} 
+        <Grid item xs={24} sm={12} md={6}>
+          <StatsCard
+            title="Total Students"
+            value={metadata.totalCount}
+            icon={<PersonIcon />}
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatsCard 
-            title="Departments" 
-            value={departments.length} 
-            icon={<DepartmentIcon />} 
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatsCard 
-            title="Current Page" 
-            value={metadata.currentPage} 
-            icon={<BadgeIcon />} 
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatsCard 
-            title="Pages" 
-            value={metadata.totalPages} 
-            icon={<SchoolIcon />}
+        <Grid item xs={24} sm={12} md={6}>
+          <StatsCard
+            title="Departments"
+            value={departments.length}
+            icon={<DepartmentIcon />}
           />
         </Grid>
       </Grid>
@@ -215,13 +202,13 @@ export default function Dashboard() {
             <FormControl fullWidth>
               <InputLabel>Department</InputLabel>
               <Select
-                value={department}
+                value={departmentId}
                 label="Department"
-                onChange={(e) => setDepartment(e.target.value)}
+                onChange={(e) => setDepartmentId(e.target.value)}
               >
                 <MenuItem value="">All Departments</MenuItem>
                 {departments.map((dept) => (
-                  <MenuItem key={dept} value={dept}>{dept}</MenuItem>
+                  <MenuItem key={dept.id} value={dept.id}>{dept.name}</MenuItem>
                 ))}
               </Select>
             </FormControl>
@@ -257,16 +244,16 @@ export default function Dashboard() {
                         <Typography variant="h6">
                           {student.firstName} {student.lastName}
                         </Typography>
-                        <Chip 
-                          label={`Level ${student.level}`} 
-                          color="primary" 
+                        <Chip
+                          label={student.level}
+                          color="primary"
                           size="small"
-                          sx={{ mr: 1 }} 
+                          sx={{ mr: 1 }}
                         />
-                        <Chip 
-                          label={student.department} 
-                          color="secondary" 
-                          size="small" 
+                        <Chip
+                          label={student.department}
+                          color="secondary"
+                          size="small"
                         />
                       </Box>
                     </Box>
@@ -320,7 +307,7 @@ export default function Dashboard() {
                       </TableCell>
                       <TableCell>{student.matriculationNumber}</TableCell>
                       <TableCell>
-                        <Chip label={`Level ${student.level}`} color="primary" size="small" />
+                        <Chip label={student.level} color="primary" size="small" />
                       </TableCell>
                       <TableCell>
                         <Chip label={student.department} color="secondary" size="small" />

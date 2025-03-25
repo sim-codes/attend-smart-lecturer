@@ -1,17 +1,25 @@
 'use client';
 
 import { useState } from 'react';
-import { Box, Toolbar, CssBaseline, AppBar, Typography, useTheme, useMediaQuery } from '@mui/material';
+import { Box, Toolbar, CssBaseline, AppBar, Typography, useTheme, useMediaQuery, Button } from '@mui/material';
 import Sidebar from '../components/sidebar';
+import { useRouter } from "next/navigation";
+import { authUtils } from "@/lib/utils";
 
 const drawerWidth = 240;
 
 export default function DashboardLayout({ children }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const theme = useTheme();
+    const router = useRouter();
 
     const handleSidebarToggle = () => {
         setSidebarOpen(!sidebarOpen);
+    };
+
+    const handleLogout = async () => {
+        await authUtils.clearAuth();
+        router.push("/");
     };
 
     return (
@@ -30,12 +38,21 @@ export default function DashboardLayout({ children }) {
                     }),
                 }}
             >
-                <Toolbar>
+                <Toolbar sx={{position: 'relative'}}>
                     <Sidebar
                         open={ sidebarOpen }
                         setOpen={ setSidebarOpen }
                         onToggle={handleSidebarToggle}
                     />
+
+                    <Button
+                        sx={{position: 'absolute', right: 10}}
+                        variant="contained"
+                        color="error"
+                        onClick={handleLogout}
+                    >
+                        Logout
+                    </Button>
                 </Toolbar>
             </AppBar>
             <Box
@@ -45,7 +62,7 @@ export default function DashboardLayout({ children }) {
                     p: 3,
                     width: {
                         xs: '100%',
-                        md: sidebarOpen ? `calc(100% - ${drawerWidth}px)` : '100%' 
+                        md: sidebarOpen ? `calc(100% - ${drawerWidth}px)` : '100%'
                     },
                     ml: {
                         xs: 0,

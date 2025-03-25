@@ -18,7 +18,8 @@ export const API_ENDPOINTS = {
         delete: (id) => `/class-schedules/${id}`,
     },
     department: {
-        getAll: (facultyId) => `/faculties/${facultyId}/departments`,
+        getAll: '/departments',
+        getAllForFaculty: (facultyId) => `/faculties/${facultyId}/departments`,
         getSingle: (facultyId, id) => `/faculties/${facultyId}/departments/${id}`,
         create: (facultyId) => `/faculties/${facultyId}/departments`,
     },

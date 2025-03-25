@@ -24,3 +24,27 @@ export const studentService = {
     );
   }
 }
+
+export const facultyService = {
+  async getAllFaculties(params) {
+    return ServiceHandler.execute(() =>
+      apiClient.get(API_ENDPOINTS.faculty.getAll)
+    );
+  }
+}
+
+export const departmentService = {
+  async getAllDepartments() {
+    return ServiceHandler.execute(() =>
+      apiClient.get(API_ENDPOINTS.department.getAll)
+    );
+  },
+  async getAllDepartmentsByFaculty(facultyId, params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return ServiceHandler.execute(() =>
+      apiClient.get(`${API_ENDPOINTS.department.getAllForFaculty(facultyId)}?${queryString}`)
+    );
+  }
+}
+
+
