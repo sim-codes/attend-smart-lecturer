@@ -57,10 +57,6 @@ const Sidebar = ({ open, setOpen, onToggle }) => {
         }
     }
 
-    const handleDrawerToggle = () => {
-        setOpen(!open);
-    };
-
     const navigateTo = (path) => {
         router.push(path);
         if (isMobile) setOpen(false);
@@ -68,19 +64,16 @@ const Sidebar = ({ open, setOpen, onToggle }) => {
 
     const commonNavItems = [
         { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
-        { text: 'Settings', icon: <SettingsIcon />, path: '/dashboard/settings' },
     ];
 
     const adminNavItems = [
         { text: 'Students', icon: <PersonIcon />, path: '/dashboard/students' },
         { text: 'Lecturers', icon: <GroupIcon />, path: '/dashboard/lecturers' },
-        { text: 'Courses', icon: <AssignmentIcon />, path: '/dashboard/courses' },
-        { text: 'Class Schedules', icon: <SchoolIcon />, path: '/dashboard/class-schedules' },
+        { text: 'Management', icon: <AssignmentIcon />, path: '/dashboard/management' },
+        { text: 'Class Schedules', icon: <SchoolIcon />, path: '/dashboard/schedules' },
     ];
 
     const lecturerNavItems = [
-        { text: 'My Courses', icon: <AssignmentIcon />, path: '/dashboard/my-courses' },
-        { text: 'Class Schedule', icon: <SchoolIcon />, path: '/dashboard/class-schedule' },
         { text: 'Attendance', icon: <FileIcon />, path: '/dashboard/attendance' },
     ];
 

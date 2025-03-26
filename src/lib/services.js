@@ -49,6 +49,19 @@ export const studentService = {
   }
 }
 
+export const levelService = {
+  async getAllLevels() {
+    return ServiceHandler.execute(() =>
+      apiClient.get(API_ENDPOINTS.level.getAll)
+    );
+  },
+  async getLevelById(id) {
+    return ServiceHandler.execute(() =>
+      apiClient.get(API_ENDPOINTS.level.getSingle(id))
+    );
+  },
+}
+
 export const facultyService = {
   async getAllFaculties(params = {}) {
     const queryString = new URLSearchParams(params).toString();
