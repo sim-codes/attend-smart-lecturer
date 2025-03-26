@@ -36,34 +36,40 @@ import {
   Percent as PercentIcon,
   Close as CloseIcon
 } from '@mui/icons-material';
+import * as XLSX from 'xlsx';
 
 import { attendanceService, studentService, facultyService, courseService, departmentService } from '@/lib/services';
 
 // Utility function to export table to CSV
-const exportToCSV = (data, filename) => {
-  const csvContent = [
-    // Header
-    ['Course', 'Total Students', 'Average Attendance %', 'Total Sessions'],
-    // Data rows
-    ...data.map(record => [
-      record.courseName,
-      record.totalStudents,
-      `${record.averageAttendance}%`,
-      record.totalSessions
-    ])
-  ].map(e => e.join(",")).join("\n");
+const exportToExcel = (data, filename, isDetailedExport = false) => {
+  let exportData;
 
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement("a");
-  if (link.download !== undefined) {
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", filename);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  if (isDetailedExport) {
+    // Detailed student-level export
+    exportData = data.flatMap(course =>
+      course.students.map(student => ({
+        Course: course.courseName,
+        StudentName: student.studentName,
+        TotalClasses: student.totalCount,
+        AttendedClasses: student.presentCount,
+        AttendancePercentage: `${Math.round((student.presentCount / student.totalCount) * 100)}%`
+      }))
+    );
+  } else {
+    // Summary export
+    exportData = data.map(record => ({
+      Course: record.courseName,
+      TotalStudents: record.totalStudents,
+      AverageAttendance: `${record.averageAttendance}%`,
+      TotalSessions: record.totalSessions
+    }));
   }
+
+  const worksheet = XLSX.utils.json_to_sheet(exportData);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Attendance Data');
+
+  XLSX.writeFile(workbook, filename);
 };
 
 // Modal style
@@ -99,6 +105,8 @@ export default function AttendancePage() {
   const [courseId, setCourseId] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [studentAttendanceDetails, setStudentAttendanceDetails] = useState([]);
+  const [detailedModalOpen, setDetailedModalOpen] = useState(false);
 
   // Pagination and Metadata
   const [metadata, setMetadata] = useState({
@@ -170,8 +178,8 @@ export default function AttendancePage() {
           const response = await courseService.getAllCoursesByDepartment(departmentId);
           if (response.success) {
             setCourses(response.data);
-            setCourseId(''); // Reset course filter to show all courses by default
-            loadAttendanceRecords(response.data.map(c => c.id)); // Load all courses initially
+            setCourseId('');
+            loadAttendanceRecords(response.data.map(c => c.id));
           } else {
             setCourses([]);
             setCourseId('');
@@ -201,26 +209,52 @@ export default function AttendancePage() {
   const loadAttendanceRecords = async (courseIds) => {
     setLoading(true);
     try {
-      const params = {
-        pageNumber: page + 1,
-        pageSize: rowsPerPage === -1 ? 1000 : rowsPerPage,
-        searchTerm: searchTerm,
-        courseIds: courseIds.join(',') // Send multiple course IDs
-      };
-
-      const response = await attendanceService.getAllAttendance(params);
-
-      if (response.success) {
-        // Process attendance records to create a course summary view
-        const processedRecords = processCourseAttendance(response.data.reports);
-        setCourseAttendance(processedRecords);
-        
-        // Update metadata based on courses rather than attendance records
-        setMetadata({
-          ...response.data.metadata,
-          totalCount: courses.length // Use total course count for pagination
-        });
+      // Defensive check for no courses
+      if (courseIds.length === 0) {
+        setCourseAttendance([]);
+        setStudentAttendanceDetails([]);
+        setMetadata({ totalCount: 0 });
+        return;
       }
+
+      const allRecords = [];
+      for (const courseId of courseIds) {
+        const params = {
+          pageNumber: page + 1,
+          pageSize: rowsPerPage === -1 ? 1000 : rowsPerPage,
+          searchTerm: searchTerm,
+          courseId: courseId
+        };
+
+        const response = await attendanceService.getAllAttendance(params);
+
+        if (response.success) {
+          allRecords.push(...response.data.reports);
+        }
+      }
+
+      // Process records
+      const processedRecords = processCourseAttendance(allRecords);
+      setCourseAttendance(processedRecords);
+
+      // Prepare detailed student attendance for modal and export
+      const studentDetails = processedRecords.flatMap(course =>
+        course.students.map(student => ({
+          courseId: course.courseId,
+          courseName: course.courseName,
+          studentId: student.studentId,
+          studentName: student.studentName,
+          totalClasses: student.totalCount,
+          attendedClasses: student.presentCount,
+          attendancePercentage: Math.round((student.presentCount / student.totalCount) * 100)
+        }))
+      );
+      setStudentAttendanceDetails(studentDetails);
+
+      setMetadata({
+        ...metadata,
+        totalCount: courses.length
+      });
     } catch (error) {
       console.error("Failed to load attendance records:", error);
     } finally {
@@ -263,7 +297,7 @@ export default function AttendancePage() {
       // Count attendance for each student
       courseGroups[record.courseId].students[record.studentId].totalCount++;
       courseGroups[record.courseId].totalRecords++;
-      
+
       if (record.status === 'Present') {
         courseGroups[record.courseId].students[record.studentId].presentCount++;
         courseGroups[record.courseId].totalPresent++;
@@ -321,10 +355,6 @@ export default function AttendancePage() {
     setPage(0);
   };
 
-  const handleExport = () => {
-    exportToCSV(courseAttendance, `attendance_summary_${new Date().toISOString()}.csv`);
-  };
-
   const openCourseDetails = async (course) => {
     setSelectedCourse(course);
     setModalOpen(true);
@@ -333,6 +363,22 @@ export default function AttendancePage() {
   const closeModal = () => {
     setModalOpen(false);
     setSelectedCourse(null);
+  };
+
+  const handleDetailedExport = () => {
+    exportToExcel(
+      courseAttendance,
+      `detailed_attendance_${new Date().toISOString().split('T')[0]}.xlsx`,
+      true
+    );
+  };
+
+  const openDetailedAttendanceModal = () => {
+    setDetailedModalOpen(true);
+  };
+
+  const closeDetailedAttendanceModal = () => {
+    setDetailedModalOpen(false);
   };
 
   return (
@@ -417,8 +463,8 @@ export default function AttendancePage() {
                 ),
                 endAdornment: (
                   <InputAdornment position="end">
-                    <Button 
-                      variant="contained" 
+                    <Button
+                      variant="contained"
                       onClick={handleSearch}
                       disabled={loading || !departmentId}
                     >
@@ -433,14 +479,22 @@ export default function AttendancePage() {
       </Paper>
 
       {/* Export Button */}
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, gap: 2 }}>
         <Button
           variant="outlined"
           startIcon={<DownloadIcon />}
-          onClick={handleExport}
+          onClick={handleDetailedExport}
           disabled={courseAttendance.length === 0}
         >
           Export Summary
+        </Button>
+        <Button
+          variant="contained"
+          startIcon={<PeopleIcon />}
+          onClick={openDetailedAttendanceModal}
+          disabled={studentAttendanceDetails.length === 0}
+        >
+          Student Attendance Details
         </Button>
       </Box>
 
@@ -527,98 +581,65 @@ export default function AttendancePage() {
         </>
       )}
 
-      {/* Course Details Modal */}
+      {/* Course Details Modal */ }
       <Modal
-        open={modalOpen}
-        onClose={closeModal}
-        aria-labelledby="course-attendance-details"
-        aria-describedby="course-attendance-details"
+        open={detailedModalOpen}
+        onClose={closeDetailedAttendanceModal}
+        aria-labelledby="student-attendance-details"
       >
         <Box sx={modalStyle}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
             <Typography id="modal-title" variant="h5" component="h2">
-              Attendance Details: {selectedCourse?.courseName}
+              Student Attendance Details
             </Typography>
-            <IconButton onClick={closeModal}>
-              <CloseIcon />
-            </IconButton>
+            <Box>
+              <Button 
+                variant="contained" 
+                onClick={handleDetailedExport}
+                startIcon={<DownloadIcon />}
+                sx={{ mr: 2 }}
+              >
+                Export to Excel
+              </Button>
+              <IconButton onClick={closeDetailedAttendanceModal}>
+                <CloseIcon />
+              </IconButton>
+            </Box>
           </Box>
           
-          {selectedCourse && (
-            <Box>
-              <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-                <Card variant="outlined" sx={{ flex: 1 }}>
-                  <CardContent>
-                    <Typography variant="body2" color="text.secondary">
-                      Total Students
-                    </Typography>
-                    <Typography variant="h4">
-                      {selectedCourse.totalStudents}
-                    </Typography>
-                  </CardContent>
-                </Card>
-                <Card variant="outlined" sx={{ flex: 1 }}>
-                  <CardContent>
-                    <Typography variant="body2" color="text.secondary">
-                      Sessions Recorded
-                    </Typography>
-                    <Typography variant="h4">
-                      {selectedCourse.totalSessions}
-                    </Typography>
-                  </CardContent>
-                </Card>
-                <Card variant="outlined" sx={{ flex: 1 }}>
-                  <CardContent>
-                    <Typography variant="body2" color="text.secondary">
-                      Average Attendance
-                    </Typography>
-                    <Typography variant="h4" color={
-                      selectedCourse.averageAttendance >= 80 ? 'success.main' :
-                      selectedCourse.averageAttendance >= 50 ? 'warning.main' : 'error.main'
-                    }>
-                      {selectedCourse.averageAttendance}%
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Box>
-
-              <Typography variant="h6" sx={{ mb: 2 }}>
-                Student Attendance
-              </Typography>
-              
-              <TableContainer component={Paper}>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Student</TableCell>
-                      <TableCell align="center">Attendance</TableCell>
-                      <TableCell align="center">Percentage</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {selectedCourse.students.map((student) => (
-                      <TableRow key={student.studentId}>
-                        <TableCell>{student.studentName}</TableCell>
-                        <TableCell align="center">
-                          {student.presentCount}/{student.totalCount}
-                        </TableCell>
-                        <TableCell align="center">
-                          <Chip 
-                            size="small"
-                            label={`${Math.round((student.presentCount / student.totalCount) * 100)}%`}
-                            color={
-                              (student.presentCount / student.totalCount) >= 0.8 ? 'success' :
-                              (student.presentCount / student.totalCount) >= 0.5 ? 'warning' : 'error'
-                            }
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Box>
-          )}
+          <TableContainer component={Paper}>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Course</TableCell>
+                  <TableCell>Student Name</TableCell>
+                  <TableCell align="center">Total Classes</TableCell>
+                  <TableCell align="center">Attended Classes</TableCell>
+                  <TableCell align="center">Attendance %</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {studentAttendanceDetails.map((detail, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{detail.courseName}</TableCell>
+                    <TableCell>{detail.studentName}</TableCell>
+                    <TableCell align="center">{detail.totalClasses}</TableCell>
+                    <TableCell align="center">{detail.attendedClasses}</TableCell>
+                    <TableCell align="center">
+                      <Chip
+                        size="small"
+                        label={`${detail.attendancePercentage}%`}
+                        color={
+                          detail.attendancePercentage >= 80 ? 'success' :
+                          detail.attendancePercentage >= 50 ? 'warning' : 'error'
+                        }
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
         </Box>
       </Modal>
     </Box>
