@@ -230,3 +230,22 @@ export const enrollmentService = {
     );
   }
 };
+
+export const lectuturerService = {
+  async getAllLecturers(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return ServiceHandler.execute(() =>
+      apiClient.get(`${API_ENDPOINTS.lecturer.getAll}?${queryString}`)
+    );
+  },
+  async getLecturerById(id) {
+    return ServiceHandler.execute(() =>
+      apiClient.get(API_ENDPOINTS.lecturer.getSingle(id))
+    );
+  },
+  async createLecturer(lecturerData) {
+    return ServiceHandler.execute(() =>
+      apiClient.post(API_ENDPOINTS.lecturer.create, lecturerData)
+    );
+  }
+}
