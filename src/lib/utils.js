@@ -1,61 +1,60 @@
+import Cookies from 'js-cookie';
+
 export const authUtils = {
-    setUserData: async (userData) => {
-        await cookieStore.set('user', JSON.stringify(userData), {
+    setUserData: (userData) => {
+        Cookies.set('user', JSON.stringify(userData), {
             secure: true,
             sameSite: 'strict',
-            maxAge: 60 * 60 * 24 * 7,
+            expires: 7, // 7 days
             path: '/'
         });
     },
 
-    setTokens: async (tokenObj) => {
-        await cookieStore.set('accessToken', tokenObj.accessToken, {
+    setTokens: (tokenObj) => {
+        Cookies.set('accessToken', tokenObj.accessToken, {
             secure: true,
-            httpOnly: true,
             sameSite: 'strict',
-            maxAge: 60 * 60 * 24,
+            expires: 1, // 1 day
             path: '/'
         });
 
-        await cookieStore.set('refreshToken', tokenObj.refreshToken, {
+        Cookies.set('refreshToken', tokenObj.refreshToken, {
             secure: true,
-            httpOnly: true,
             sameSite: 'strict',
-            maxAge: 60 * 60 * 24 * 30,
+            expires: 30, // 30 days
             path: '/'
         });
     },
 
-    getUserData: async () => {
-        const userDataCookie = await cookieStore.get('user');
-        return userDataCookie ? JSON.parse(userDataCookie.value) : null;
+    getUserData: () => {
+        const userData = Cookies.get('user');
+        return userData ? JSON.parse(userData) : null;
     },
 
-    getTokens: async () => {
-        const accessToken = await cookieStore.get('accessToken');
-        const refreshToken = await cookieStore.get('refreshToken');
+    getTokens: () => {
+        const accessToken = Cookies.get('accessToken');
+        const refreshToken = Cookies.get('refreshToken');
 
         if (!accessToken && !refreshToken) return null;
 
         return {
-            accessToken: accessToken ? accessToken.value : null,
-            refreshToken: refreshToken ? refreshToken.value : null
+            accessToken: accessToken || null,
+            refreshToken: refreshToken || null
         };
     },
 
-    updateAccessToken: async (newAccessToken) => {
-        await cookieStore.set('accessToken', newAccessToken, {
+    updateAccessToken: (newAccessToken) => {
+        Cookies.set('accessToken', newAccessToken, {
             secure: true,
-            httpOnly: true,
             sameSite: 'strict',
-            maxAge: 60 * 60 * 24,
+            expires: 1, // 1 day
             path: '/'
         });
     },
 
-    clearAuth: async () => {
-        await cookieStore.delete('user');
-        await cookieStore.delete('accessToken');
-        await cookieStore.delete('refreshToken');
+    clearAuth: () => {
+        Cookies.remove('user', { path: '/' });
+        Cookies.remove('accessToken', { path: '/' });
+        Cookies.remove('refreshToken', { path: '/' });
     }
 };

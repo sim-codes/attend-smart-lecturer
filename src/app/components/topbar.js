@@ -60,14 +60,9 @@ export default function TopBar({ open, onToggle }) {
                     {open ? <MenuOpenIcon /> : <MenuIcon />}
                 </IconButton>
                 <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-                    University Management System
+                    Smart Attendance System
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <IconButton color="inherit">
-                        <Badge badgeContent={4} color="error">
-                            <NotificationsIcon />
-                        </Badge>
-                    </IconButton>
                     <IconButton
                         color="inherit"
                         onClick={handleProfileMenuOpen}

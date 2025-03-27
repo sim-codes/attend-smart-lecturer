@@ -122,12 +122,9 @@ export default function Page() {
       const result = await authService.login(formData);
 
       if (result.success) {
-        Promise.all([
-          authUtils.setUserData(result.data.user),
-          authUtils.setTokens(result.data.token)
-        ]).then(() => {
-          router.push('/dashboard');
-        });
+        authUtils.setUserData(result.data.user),
+          authUtils.setTokens(result.data.token);
+        router.push('/dashboard');
       }
     } catch (error) {
       setErrors({ message: error?.message || 'An error occurred. Please try again.' });

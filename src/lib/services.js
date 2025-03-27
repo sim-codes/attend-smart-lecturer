@@ -159,6 +159,30 @@ export const classScheduleService = {
   }
 }
 
+export const classroomService = {
+  async getAllClassroomsByFaculty(facultyId, params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return ServiceHandler.execute(() =>
+      apiClient.get(`${API_ENDPOINTS.classroom.getAllForFaculty(facultyId)}?${queryString}`)
+    );
+  },
+  async getClassroomById(facultyId, id) {
+    return ServiceHandler.execute(() =>
+      apiClient.get(API_ENDPOINTS.classroom.getSingle(facultyId, id))
+    );
+  },
+  async createClassroom(facultyId, classroomData) {
+    return ServiceHandler.execute(() =>
+      apiClient.post(API_ENDPOINTS.classroom.create(facultyId), classroomData)
+    );
+  },
+  async deleteClassroom(facultyId, id) {
+    return ServiceHandler.execute(() =>
+      apiClient.delete(API_ENDPOINTS.classroom.delete(facultyId, id))
+    );
+  }
+};
+
 export const attendanceService = {
   async getAllAttendance(params = {}) {
     const queryString = new URLSearchParams(params).toString();

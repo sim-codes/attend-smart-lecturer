@@ -17,6 +17,12 @@ export const API_ENDPOINTS = {
         update: (id) => `/class-schedules/${id}`,
         delete: (id) => `/class-schedules/${id}`,
     },
+    classroom: {
+        getAllForFaculty: (facultyId) => `/api/faculties/${facultyId}/classrooms`,
+        create: (facultyId) => `/api/faculties/${facultyId}/classrooms`,
+        getSingle: (facultyId, id) => `/api/faculties/${facultyId}/classrooms/${id}`,
+        delete: (facultyId, id) => `/api/faculties/${facultyId}/classrooms/${id}`,
+    },
     department: {
         getAll: '/departments',
         getAllForFaculty: (facultyId) => `/faculties/${facultyId}/departments`,
