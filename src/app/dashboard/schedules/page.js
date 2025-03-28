@@ -25,16 +25,14 @@ const SchedulePage = () => {
   const [schedules, setSchedules] = useState([]);
   const [lecturers, setLecturers] = useState([]);
   const [paginationModels, setPaginationModels] = useState({});
-  
+
   const [selectedFaculty, setSelectedFaculty] = useState(null);
   const [showClassroomForm, setShowClassroomForm] = useState(false);
   const [showScheduleForm, setShowScheduleForm] = useState(false);
 
-  // Fetch lecturers along with other initial data
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        // Fetch lecturers
         const lecturerResponse = await lecturerService.getAllLecturers();
         if (lecturerResponse.success) {
             console.log('Lecturers:', lecturerResponse.data);
@@ -57,15 +55,15 @@ const SchedulePage = () => {
 
   // Memoized schedule columns with lecturer name lookup
   const scheduleColumns = useMemo(() => [
-    { 
-      field: 'courseTitle', 
-      headerName: 'Course', 
-      flex: 1 
+    {
+      field: 'courseTitle',
+      headerName: 'Course',
+      flex: 1
     },
-    { 
-      field: 'dayOfWeek', 
-      headerName: 'Day', 
-      flex: 1 
+    {
+      field: 'dayOfWeek',
+      headerName: 'Day',
+      flex: 1
     },
     { 
       field: 'startTime', 
