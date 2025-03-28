@@ -42,6 +42,12 @@ export const API_ENDPOINTS = {
         generateResetToken: '/authentication/generate-reset-token',
         refreshToken: '/token/refresh',
     },
+    lecturer: {
+        getAll: '/lecturers',
+        getSingle: (lecturerId) => `/lecturers/${lecturerId}`,
+        create: '/lecturers',
+        update: (lecturerId) => `/lecturers/${lecturerId}`,
+    },
     student: {
         getAll: '/students',
         getSingle: (id) => `/students/${id}`,

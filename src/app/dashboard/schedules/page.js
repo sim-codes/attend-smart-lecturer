@@ -1,17 +1,17 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  Tab, 
-  Tabs, 
-  Box, 
-  Typography, 
-  Button, 
-  Paper, 
-  Select, 
-  MenuItem, 
-  FormControl, 
-  InputLabel 
+import {
+  Tab,
+  Tabs,
+  Box,
+  Typography,
+  Button,
+  Paper,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import { classroomService, classScheduleService, facultyService, lecturerService } from '@/lib/services';
@@ -35,7 +35,6 @@ const SchedulePage = () => {
       try {
         const lecturerResponse = await lecturerService.getAllLecturers();
         if (lecturerResponse.success) {
-            console.log('Lecturers:', lecturerResponse.data);
           setLecturers(lecturerResponse.data);
         }
 

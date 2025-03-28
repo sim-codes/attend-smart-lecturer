@@ -40,11 +40,10 @@ const ClassScheduleForm = ({ open, onClose, facultyId, onSuccess }) => {
           lecturerService.getAllLecturers(),
           departmentService.getAllDepartments()
         ]);
-
-        console.log('Lecturers:', lecturersRes);
-        console.log('Departments:', departmentsRes);
-        setLecturers(lecturersRes);
-        setDepartments(departmentsRes);
+        console.log('lecturersRes', lecturersRes);
+        console.log('departmentsRes', departmentsRes);
+        setLecturers(lecturersRes?.data);
+        setDepartments(departmentsRes?.data);
       } catch (error) {
         console.error('Error fetching initial data:', error);
       }
@@ -58,11 +57,11 @@ const ClassScheduleForm = ({ open, onClose, facultyId, onSuccess }) => {
       if (formData.departmentId) {
         try {
           const [coursesRes, levelsRes] = await Promise.all([
-            courseService.getByDepartment(formData.departmentId),
-            levelService.getByDepartment(formData.departmentId)
+            courseService.getAllCoursesByDepartment(formData.departmentId),
+            levelService.getAllLevels(formData.departmentId)
           ]);
-          setCourses(coursesRes);
-          setLevels(levelsRes);
+          setCourses(coursesRes?.data);
+          setLevels(levelsRes?.data);
         } catch (error) {
           console.error('Error fetching dependent data:', error);
         }
