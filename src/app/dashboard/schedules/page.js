@@ -142,7 +142,6 @@ const SchedulePage = () => {
       const response = await facultyService.getAllFaculties();
       if (response.success) {
         const facultyData = response.data;
-        console.log('Faculties:', facultyData);
         setFaculties(facultyData);
 
         // Initialize pagination and select first faculty if exists
@@ -171,8 +170,8 @@ const SchedulePage = () => {
         setClassrooms(prev => ({
           ...prev,
           [facultyId]: {
-            data: response.data.classrooms,
-            total: response.data.totalCount
+            data: response.data,
+            total: response.data.length
           }
         }));
       }

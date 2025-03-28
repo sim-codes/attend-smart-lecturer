@@ -231,7 +231,7 @@ export const enrollmentService = {
   }
 };
 
-export const lectuturerService = {
+export const lecturerService = {
   async getAllLecturers(params = {}) {
     const queryString = new URLSearchParams(params).toString();
     return ServiceHandler.execute(() =>

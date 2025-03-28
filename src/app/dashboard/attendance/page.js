@@ -1,15 +1,15 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { 
-  Box, 
-  Typography, 
-  Paper, 
-  TableContainer, 
-  Table, 
-  TableHead, 
-  TableBody, 
-  TableRow, 
-  TableCell, 
+import {
+  Box,
+  Typography,
+  Paper,
+  TableContainer,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
   TablePagination,
   TextField,
   InputAdornment,
@@ -22,14 +22,11 @@ import {
   CircularProgress,
   Modal,
   Chip,
-  Avatar,
-  Card,
-  CardContent,
   Tooltip,
   IconButton
 } from '@mui/material';
-import { 
-  Search as SearchIcon, 
+import {
+  Search as SearchIcon,
   Download as DownloadIcon,
   CalendarToday as CalendarIcon,
   People as PeopleIcon,
@@ -177,9 +174,9 @@ export default function AttendancePage() {
         try {
           const response = await courseService.getAllCoursesByDepartment(departmentId);
           if (response.success) {
-            setCourses(response.data);
+            setCourses(response.data.courses);
             setCourseId('');
-            loadAttendanceRecords(response.data.map(c => c.id));
+            loadAttendanceRecords(response.data.courses.map(c => c.id));
           } else {
             setCourses([]);
             setCourseId('');

@@ -78,12 +78,12 @@ const StyledDivider = styled(Divider)({
 });
 
 const schema = z.object({
-  username: z.string().min(6, 'Username must be at least 6 characters long.'),
+  email: z.string().email('Enter correct email format some@email.com'),
   password: z.string().min(8, 'Password must be at least 8 characters long.')
 });
 
 export default function Page() {
-  const [errors, setErrors] = useState({ username: '', password: '', message: '' });
+  const [errors, setErrors] = useState({ email: '', password: '', message: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const router = useRouter();
@@ -100,7 +100,7 @@ export default function Page() {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const formData = {
-      username: data.get('username'),
+      email: data.get('email'),
       password: data.get('password')
     };
 
@@ -108,14 +108,14 @@ export default function Page() {
     if (!validation.success) {
       const fieldErrors = validation.error.format();
       setErrors({
-        username: fieldErrors.username?._errors[0] || '',
+        email: fieldErrors.email?._errors[0] || '',
         password: fieldErrors.password?._errors[0] || ''
       });
       return;
     }
 
     // Clear any previous errors
-    setErrors({ username: '', password: '' });
+    setErrors({ email: '', password: '' });
     setIsLoading(true);
 
     try {
@@ -180,14 +180,14 @@ export default function Page() {
 
           <Box component="form" onSubmit={handleSubmit} noValidate sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 2.5 }}>
             <FormControl>
-              <StyledFormLabel htmlFor="username">Username</StyledFormLabel>
+              <StyledFormLabel htmlFor="email">Email</StyledFormLabel>
               <StyledTextField
-                error={!!errors.username}
-                helperText={errors.username}
-                id="username"
+                error={!!errors.email}
+                helperText={errors.email}
+                id="email"
                 type="text"
-                name="username"
-                placeholder="Simcodes"
+                name="email"
+                placeholder="simcodes@gmail.com"
                 required
                 fullWidth
                 variant="outlined"
@@ -228,14 +228,14 @@ export default function Page() {
                 Forgot your password?
               </Link>
           </Box>
-          
+
           <StyledDivider>or</StyledDivider>
-          
+
           <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
             <Typography sx={{ color: colorPalette.text.secondary }}>
               Don&apos;t have an account?
             </Typography>
-            <StyledLink href="/sign-up" variant="body2">
+            <StyledLink href="/register" variant="body2">
               Sign up
             </StyledLink>
           </Box>

@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button } from '@mui/material';
+import { classroomService } from '@/lib/services';
 
 const ClassroomForm = ({ open, onClose, facultyId, onSuccess }) => {
   const [formData, setFormData] = useState({
@@ -38,8 +39,10 @@ const ClassroomForm = ({ open, onClose, facultyId, onSuccess }) => {
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           />
-          
-          {/* Top Left Coordinates */}
+
+          {/* Top Left Coordinates */ }
+          <div className='flex gap-x-4 flex-wrap'>
+          <div className='flex gap-x-2'>
           <TextField
             fullWidth
             margin="normal"
@@ -56,8 +59,10 @@ const ClassroomForm = ({ open, onClose, facultyId, onSuccess }) => {
             value={formData.topLeftLon}
             onChange={(e) => setFormData({ ...formData, topLeftLon: e.target.value })}
           />
+          </div>
 
-          {/* Top Right Coordinates */}
+            {/* Top Right Coordinates */ }
+            <div className='flex gap-x-2'>
           <TextField
             fullWidth
             margin="normal"
@@ -73,9 +78,13 @@ const ClassroomForm = ({ open, onClose, facultyId, onSuccess }) => {
             type="number"
             value={formData.topRightLon}
             onChange={(e) => setFormData({ ...formData, topRightLon: e.target.value })}
-          />
+              />
+              </div>
+            </div>
 
-          {/* Bottom Left Coordinates */}
+          {/* Bottom Left Coordinates */ }
+          <div className='flex gap-x-4 flex-wrap'>
+          <div className='flex gap-x-2'>
           <TextField
             fullWidth
             margin="normal"
@@ -91,9 +100,11 @@ const ClassroomForm = ({ open, onClose, facultyId, onSuccess }) => {
             type="number"
             value={formData.bottomLeftLon}
             onChange={(e) => setFormData({ ...formData, bottomLeftLon: e.target.value })}
-          />
+              />
+              </div>
 
-          {/* Bottom Right Coordinates */}
+            {/* Bottom Right Coordinates */ }
+            <div className='flex gap-x-2'>
           <TextField
             fullWidth
             margin="normal"
@@ -109,7 +120,9 @@ const ClassroomForm = ({ open, onClose, facultyId, onSuccess }) => {
             type="number"
             value={formData.bottomRightLon}
             onChange={(e) => setFormData({ ...formData, bottomRightLon: e.target.value })}
-          />
+            />
+            </div>
+            </div>
         </DialogContent>
         <DialogActions>
           <Button onClick={onClose}>Cancel</Button>

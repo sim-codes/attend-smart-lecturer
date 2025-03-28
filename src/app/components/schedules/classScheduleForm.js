@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button } from '@mui/material';
+import { classScheduleService, lecturerService } from '@/lib/services';
 
 const ClassScheduleForm = ({ open, onClose, facultyId, onSuccess }) => {
   const [formData, setFormData] = useState({

@@ -1,235 +1,325 @@
 "use client";
-import { useState } from "react";
-import axios from "axios";
-import Link from "next/link";
-import AttendanceLogo from "../components/AttendanceLogo";
 
-const API_URL = "https://dcv7qt3-7195.uks1.devtunnels.ms/api/authentication";
+import Box from '@mui/material/Box';
+import Checkbox from '@mui/material/Checkbox';
+import CssBaseline from '@mui/material/CssBaseline';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Divider from '@mui/material/Divider';
+import FormLabel from '@mui/material/FormLabel';
+import FormControl from '@mui/material/FormControl';
+import Link from '@mui/material/Link';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import Stack from '@mui/material/Stack';
+import { styled } from '@mui/material/styles';
+import { useState } from 'react';
+import { z } from 'zod';
+import { colorPalette } from '../constants/color';
+import Card from '../components/card';
+import ForgotPassword from '../components/forgot-password';
+import StyledButton from '../components/button';
+import { authService } from '@/lib/services';
+import { authUtils } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
-export default function Signup() {
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    username: "",
-    email: "",
-    password: "",
-    phoneNumber: "",
-    profileImageUrl: "", // Optional
-    roles: ["user"], // Default role
+const SignInContainer = styled(Stack)(({ theme }) => ({
+  height: '100vh',
+  minHeight: '100%',
+  padding: theme.spacing(2),
+  backgroundColor: colorPalette.background.main,
+  color: colorPalette.text.primary,
+  [theme.breakpoints.up('sm')]: {
+    padding: theme.spacing(4),
+  }
+}));
+
+const StyledFormLabel = styled(FormLabel)({
+  color: colorPalette.text.secondary,
+  marginBottom: '4px',
+  fontSize: '0.9rem'
+});
+
+const StyledTextField = styled(TextField)(({ error }) => ({
+  '& .MuiOutlinedInput-root': {
+    backgroundColor: colorPalette.background.field,
+    '& fieldset': {
+      borderColor: error ? colorPalette.error : 'rgba(255, 255, 255, 0.2)',
+    },
+    '&:hover fieldset': {
+      borderColor: error ? colorPalette.error : colorPalette.primary.light,
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: error ? colorPalette.error : colorPalette.primary.main,
+    },
+  },
+  '& .MuiInputBase-input': {
+    color: colorPalette.text.primary,
+  },
+  '& .MuiFormHelperText-root': {
+    color: colorPalette.error,
+  }
+}));
+
+const StyledLink = styled(Link)({
+  color: colorPalette.primary.light,
+  textDecoration: 'none',
+  fontWeight: 500,
+  '&:hover': {
+    textDecoration: 'underline',
+  }
+});
+
+const StyledDivider = styled(Divider)({
+  '&::before, &::after': {
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  color: colorPalette.text.secondary,
+  margin: '16px 0',
+});
+
+const schema = z.object({
+  firstName: z.string(),
+  lastName: z.string(),
+  email: z.string().email('Enter a valid email address'),
+  username: z.string().min(6, 'Username must be at least 6 characters long.'),
+  password: z.string().min(8, 'Password must be at least 8 characters long.'),
+  profileImageUrl: z.string().url(),
+  phoneNumber: z.string().min(11, 'Your phone number should not be less than 11')
+    .max(11, 'Your phone number should not be greater than 11')
+});
+
+export default function Page() {
+  const [errors, setErrors] = useState({
+    username: '',
+    password: '',
+    message: ''
   });
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const router = useRouter();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-
-    try {
-      const response = await axios.post(`${API_URL}/authentication`, formData);
-
-      if (response.status === 201 || response.status === 200) {
-        setSuccess("Account created successfully! Please log in.");
-        setFormData({
-          firstName: "",
-          lastName: "",
-          username: "",
-          email: "",
-          password: "",
-          phoneNumber: "",
-          profileImageUrl: "",
-          roles: ["user"],
-        });
-      }
-    } catch (err) {
-      setError(
-        err.response?.data?.message || "Failed to create account. Try again."
-      );
-    }
+  const handleClickOpen = () => {
+    setOpen(true);
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    const formData = {
+      username: data.get('username'),
+      password: data.get('password')
+    };
+
+    const validation = schema.safeParse(formData);
+    if (!validation.success) {
+      const fieldErrors = validation.error.format();
+      setErrors({
+        username: fieldErrors.username?._errors[0] || '',
+        password: fieldErrors.password?._errors[0] || ''
+      });
+      return;
+    }
+
+    // Clear any previous errors
+    setErrors({ username: '', password: '' });
+    setIsLoading(true);
+
+    try {
+      const result = await authService.login(formData);
+
+      if (result.success) {
+        authUtils.setUserData(result.data.user),
+          authUtils.setTokens(result.data.token);
+        router.push('/dashboard');
+      }
+    } catch (error) {
+      setErrors({ message: error?.message || 'An error occurred. Please try again.' });
+    } finally {
+      setIsLoading(false);
+    }
+    return;
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-xl shadow-xl">
-        <div className="text-center">
-          <div className="mx-auto h-12 w-auto">
-            <AttendanceLogo />
-          </div>
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            Create your account
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Already have an account?{" "}
-            <Link
-              href="/login"
-              className="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-300"
-            >
-              Sign in
-            </Link>
-          </p>
-        </div>
-
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div
-              className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md shadow-sm"
-              role="alert"
-            >
-              <p className="font-medium">Error</p>
-              <p>{error}</p>
-            </div>
-          )}
-          {success && (
-            <div
-              className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md shadow-sm"
-              role="alert"
-            >
-              <p className="font-medium">Success</p>
-              <p>{success}</p>
-            </div>
-          )}
-          <div className="rounded-md space-y-5">
-            <div>
-              <label htmlFor="firstName" className="sr-only">
-                First Name
-              </label>
-              <input
-                id="firstName"
-                name="firstName"
-                type="text"
-                required
-                className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm shadow-sm transition duration-200"
-                placeholder="First Name"
-                value={formData.firstName}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label htmlFor="lastName" className="sr-only">
-                Last Name
-              </label>
-              <input
-                id="lastName"
-                name="lastName"
-                type="text"
-                required
-                className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm shadow-sm transition duration-200"
-                placeholder="Last Name"
-                value={formData.lastName}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label htmlFor="username" className="sr-only">
-                Username
-              </label>
-              <input
-                id="username"
-                name="username"
-                type="text"
-                required
-                className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm shadow-sm transition duration-200"
-                placeholder="Username"
-                value={formData.username}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label htmlFor="email" className="sr-only">
-                Email Address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm shadow-sm transition duration-200"
-                placeholder="Email Address"
-                value={formData.email}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm shadow-sm transition duration-200"
-                placeholder="Password"
-                value={formData.password}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label htmlFor="phoneNumber" className="sr-only">
-                Phone Number
-              </label>
-              <input
-                id="phoneNumber"
-                name="phoneNumber"
-                type="text"
-                required
-                className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm shadow-sm transition duration-200"
-                placeholder="Phone Number"
-                value={formData.phoneNumber}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label htmlFor="profileImageUrl" className="sr-only">
-                Profile Image URL
-              </label>
-              <input
-                id="profileImageUrl"
-                name="profileImageUrl"
-                type="text"
-                className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm shadow-sm transition duration-200"
-                placeholder="Profile Image URL (Optional)"
-                value={formData.profileImageUrl}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-300 shadow-md"
+    <div>
+      <CssBaseline enableColorScheme />
+      <SignInContainer direction="column" justifyContent="center" alignItems="center">
+        <Card variant="outlined">
+          <Typography
+            component="h1"
+            variant="h4"
+            sx={{
+              width: '100%',
+              fontSize: 'clamp(1.8rem, 8vw, 2rem)',
+              textAlign: 'center',
+              fontWeight: 700,
+              color: colorPalette.text.primary,
+              marginBottom: '8px'
+            }}
           >
-            <span className="absolute left-0 inset-y-0 flex items-center pl-3">
-              <svg
-                className="h-5 w-5 text-blue-500 group-hover:text-blue-400"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </span>
-            Create Account
-          </button>
-        </form>
+            Register
+          </Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              textAlign: 'center',
+              color: colorPalette.text.secondary,
+              marginBottom: '16px'
+            }}
+          >
+            Create an account to procceed
+          </Typography>
 
-        <div className="text-sm text-center text-gray-500 mt-6">
-          By signing up, you agree to our Terms of Service and Privacy Policy
-        </div>
-      </div>
+          { errors.message && (
+            <Typography
+              variant="body2"
+              sx={{
+                textAlign: 'center',
+                color: colorPalette.text.error,
+                marginBottom: '16px'
+              }}
+            >
+              {errors.message}
+            </Typography>
+          )}
+
+
+          <Box component="form" onSubmit={ handleSubmit } noValidate sx={ { display: 'flex', flexDirection: 'column', width: '100%', gap: 2.5 } }>
+
+            <div className='flex gap-x-4'>
+            <FormControl>
+              <StyledFormLabel htmlFor="firstName">First Name</StyledFormLabel>
+              <StyledTextField
+                error={!!errors.firstName}
+                helperText={errors.firstName}
+                id="firstName"
+                type="text"
+                name="firstName"
+                placeholder="Segun"
+                required
+                fullWidth
+                variant="outlined"
+                size="medium"
+              />
+              </FormControl>
+
+              <FormControl>
+              <StyledFormLabel htmlFor="lastName">Last Name</StyledFormLabel>
+              <StyledTextField
+                error={!!errors.lastName}
+                helperText={errors.lastName}
+                id="lastName"
+                type="text"
+                name="lastName"
+                placeholder="Michael"
+                required
+                fullWidth
+                variant="outlined"
+                size="medium"
+              />
+            </FormControl>
+            </div>
+
+            <div className='flex gap-x-4'>
+            <FormControl>
+              <StyledFormLabel htmlFor="username">Username</StyledFormLabel>
+              <StyledTextField
+                error={!!errors.username}
+                helperText={errors.username}
+                id="username"
+                type="text"
+                name="username"
+                placeholder="Simcodes"
+                required
+                fullWidth
+                variant="outlined"
+                size="medium"
+              />
+              </FormControl>
+
+              <FormControl>
+              <StyledFormLabel htmlFor="phoneNumber">Phone Number</StyledFormLabel>
+              <StyledTextField
+                error={!!errors.phoneNumber}
+                helperText={errors.phoneNumber}
+                id="phoneNumber"
+                type="text"
+                name="phoneNumber"
+                placeholder="0801234567809"
+                required
+                fullWidth
+                variant="outlined"
+                size="medium"
+              />
+            </FormControl>
+            </div>
+
+            <FormControl>
+              <StyledFormLabel htmlFor="email">Email</StyledFormLabel>
+              <StyledTextField
+                error={!!errors.username}
+                helperText={errors.username}
+                id="email"
+                type="text"
+                name="email"
+                placeholder="Simcodes"
+                required
+                fullWidth
+                variant="outlined"
+                size="medium"
+              />
+            </FormControl>
+
+            <FormControl>
+              <StyledFormLabel htmlFor="password">Password</StyledFormLabel>
+              <StyledTextField
+                error={!!errors.password}
+                helperText={errors.password}
+                name="password"
+                placeholder="••••••"
+                type="password"
+                id="password"
+                autoComplete="current-password"
+                required
+                fullWidth
+                variant="outlined"
+                size="medium"
+              />
+            </FormControl>
+
+            <ForgotPassword open={ open } handleClose={ handleClose } />
+
+            <StyledButton type="submit" fullWidth variant="contained" disabled={isLoading}>
+              {isLoading ? "Signing in…" : "Sign in"}
+            </StyledButton>
+
+            <Link
+                component="button"
+                type="button"
+                onClick={handleClickOpen}
+                variant="body2"
+                sx={{ alignSelf: 'center', color: colorPalette.text.secondary }}
+              >
+                Forgot your password?
+              </Link>
+          </Box>
+
+          <StyledDivider>or</StyledDivider>
+
+          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
+            <Typography sx={{ color: colorPalette.text.secondary }}>
+              Already have an account?
+            </Typography>
+            <StyledLink href="/login" variant="body2">
+              Login
+            </StyledLink>
+          </Box>
+        </Card>
+      </SignInContainer>
     </div>
   );
 }
