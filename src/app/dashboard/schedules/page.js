@@ -62,42 +62,38 @@ const SchedulePage = () => {
       headerName: 'Day',
       flex: 1
     },
-    { 
-      field: 'startTime', 
-      headerName: 'Start Time', 
-      flex: 1 
-    },
-    { 
-      field: 'endTime', 
-      headerName: 'End Time', 
-      flex: 1 
-    },
-    { 
-      field: 'lecturerName', 
-      headerName: 'Lecturer', 
-      flex: 1,
-      valueGetter: (params) => {
-        const lecturer = lecturers.find(l => l.id === params.row.lecturerId);
-        return lecturer ? `${lecturer.firstName} ${lecturer.lastName}` : 'Unknown';
-      }
+    {
+      field: 'startTime',
+      headerName: 'Start Time',
+      flex: 1
     },
     {
-      field: 'actions', 
-      headerName: 'Actions', 
-      flex: 1, 
+      field: 'endTime',
+      headerName: 'End Time',
+      flex: 1
+    },
+    {
+      field: 'lecturerName',
+      headerName: 'Lecturer',
+      flex: 1
+    },
+    {
+      field: 'actions',
+      headerName: 'Actions',
+      flex: 1,
       renderCell: (params) => (
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button 
-            size="small" 
-            variant="outlined" 
+          <Button
+            size="small"
+            variant="outlined"
             onClick={() => handleEditSchedule(params.row)}
           >
             Edit
           </Button>
-          <Button 
-            size="small" 
-            color="error" 
-            variant="outlined" 
+          <Button
+            size="small"
+            color="error"
+            variant="outlined"
             onClick={() => handleDeleteSchedule(params.row.id)}
           >
             Delete
@@ -109,18 +105,18 @@ const SchedulePage = () => {
 
   // Classroom columns with only name
   const classroomColumns = [
-    { 
-      field: 'name', 
-      headerName: 'Classroom Name', 
-      flex: 1 
+    {
+      field: 'name',
+      headerName: 'Classroom Name',
+      flex: 1
     },
-    { 
-      field: 'actions', 
-      headerName: 'Actions', 
+    {
+      field: 'actions',
+      headerName: 'Actions',
       flex: 1,
       renderCell: (params) => (
-        <Button 
-          color="error" 
+        <Button
+          color="error"
           variant="outlined"
           size="small"
           onClick={() => handleDeleteClassroom(selectedFaculty, params.row.id)}
@@ -199,7 +195,16 @@ const SchedulePage = () => {
   const loadClassSchedules = async () => {
     try {
       const response = await classScheduleService.getAllClassSchedules();
-      setSchedules(response.data);
+      if (response.success) {
+        const schedulesWithLecturerNames = response.data.map(schedule => {
+          const lecturer = lecturers.find(l => l.userId === schedule.lecturerId);
+          return {
+            ...schedule,
+            lecturerName: lecturer ? `${lecturer.firstName} ${lecturer.lastName}` : 'Unknown'
+          };
+        });
+        setSchedules(schedulesWithLecturerNames);
+      }
     } catch (error) {
       console.error('Error loading schedules:', error);
     }
@@ -260,9 +265,9 @@ const SchedulePage = () => {
 
       {tabValue === 0 && (
         <Box>
-          <Button 
-            variant="contained" 
-            color="primary" 
+          <Button
+            variant="contained"
+            color="primary"
             onClick={() => setShowScheduleForm(true)}
             sx={{ mb: 2 }}
           >

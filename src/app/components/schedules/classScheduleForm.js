@@ -73,7 +73,7 @@ const ClassScheduleForm = ({ open, onClose, facultyId, onSuccess, classrooms }) 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await classScheduleService.create(formData);
+      await classScheduleService.createClassSchedule(formData);
       onSuccess();
       onClose();
     } catch (error) {
