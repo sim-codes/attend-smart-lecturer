@@ -1,44 +1,16 @@
 import PropTypes from 'prop-types';
-import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
-import OutlinedInput from '@mui/material/OutlinedInput';
-import { styled } from '@mui/material/styles';
-import { colorPalette } from '../constants/color';
+import { TextField, Button } from '@mui/material';
 
-const StyledDialog = styled(Dialog)(({ theme }) => ({
-  '& .MuiPaper-root': {
-    backgroundColor: colorPalette.background.paper,
-    color: colorPalette.text.primary,
-    boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.3)',
-    borderRadius: '12px',
-    border: `1px solid ${colorPalette.background.field}`,
-  },
-}));
-
-const StyledButton = styled(Button)({
-  backgroundColor: colorPalette.primary.main,
-  color: colorPalette.text.primary,
-  padding: '10px 0',
-  textTransform: 'none',
-  fontWeight: 600,
-  borderRadius: '8px',
-  '&:hover': {
-    backgroundColor: colorPalette.primary.dark,
-  },
-  '&.Mui-disabled': {
-    backgroundColor: colorPalette.background.field,
-    color: colorPalette.text.secondary,
-  },
-});
 
 // Updated usage in component
 function ForgotPassword({ open, handleClose }) {
   return (
-    <StyledDialog
+    <Dialog
       open={open}
       onClose={handleClose}
       slotProps={{
@@ -60,7 +32,7 @@ function ForgotPassword({ open, handleClose }) {
           Enter your account&apos;s email address, and we&apos;ll send you a link to
           reset your password.
         </DialogContentText>
-        <OutlinedInput
+        <TextField
           autoFocus
           required
           margin="dense"
@@ -73,12 +45,12 @@ function ForgotPassword({ open, handleClose }) {
         />
       </DialogContent>
       <DialogActions sx={{ pb: 3, px: 3 }}>
-        <StyledButton variant='outlined' onClick={handleClose}>Cancel</StyledButton>
-        <StyledButton variant="contained" type="submit">
+        <Button variant='outlined' onClick={handleClose}>Cancel</Button>
+        <Button variant="contained" type="submit">
           Continue
-        </StyledButton>
+        </Button>
       </DialogActions>
-    </StyledDialog>
+    </Dialog>
   );
 }
 

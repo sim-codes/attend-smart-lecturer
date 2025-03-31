@@ -14,7 +14,6 @@ import Stack from '@mui/material/Stack';
 import { styled } from '@mui/material/styles';
 import { useState } from 'react';
 import { z } from 'zod';
-import { colorPalette } from '../constants/color';
 import Card from '../components/card';
 import ForgotPassword from '../components/forgot-password';
 import StyledButton from '../components/button';
@@ -26,56 +25,54 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
   height: '100vh',
   minHeight: '100%',
   padding: theme.spacing(2),
-  backgroundColor: colorPalette.background.main,
-  color: colorPalette.text.primary,
+  backgroundColor: theme.palette.background.default,
+  color: theme.palette.text.primary,
   [theme.breakpoints.up('sm')]: {
     padding: theme.spacing(4),
   }
 }));
 
-const StyledFormLabel = styled(FormLabel)({
-  color: colorPalette.text.secondary,
+const StyledFormLabel = styled(FormLabel)(({ theme }) => ({
+  color: theme.palette.text.secondary,
   marginBottom: '4px',
   fontSize: '0.9rem'
-});
+}));
 
-const StyledTextField = styled(TextField)(({ error }) => ({
+const StyledTextField = styled(TextField)(({ theme, error }) => ({
   '& .MuiOutlinedInput-root': {
-    backgroundColor: colorPalette.background.field,
+    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
     '& fieldset': {
-      borderColor: error ? colorPalette.error : 'rgba(255, 255, 255, 0.2)',
+      borderColor: error ? theme.palette.error.main : theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
     },
     '&:hover fieldset': {
-      borderColor: error ? colorPalette.error : colorPalette.primary.light,
+      borderColor: error ? theme.palette.error.main : theme.palette.primary.light,
     },
     '&.Mui-focused fieldset': {
-      borderColor: error ? colorPalette.error : colorPalette.primary.main,
+      borderColor: error ? theme.palette.error.main : theme.palette.primary.main,
     },
   },
-  '& .MuiInputBase-input': {
-    color: colorPalette.text.primary,
-  },
   '& .MuiFormHelperText-root': {
-    color: colorPalette.error,
+    color: theme.palette.error.main,
   }
 }));
 
-const StyledLink = styled(Link)({
-  color: colorPalette.primary.light,
+const StyledLink = styled(Link)(({ theme }) => ({
+  color: theme.palette.primary.light,
   textDecoration: 'none',
   fontWeight: 500,
   '&:hover': {
     textDecoration: 'underline',
   }
-});
+}));
 
-const StyledDivider = styled(Divider)({
+const StyledDivider = styled(Divider)(({ theme }) => ({
   '&::before, &::after': {
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
   },
-  color: colorPalette.text.secondary,
+  color: theme.palette.text.secondary,
   margin: '16px 0',
-});
+  backgroundColor: 'transparent',
+}));
 
 const schema = z.object({
   email: z.string().email('Enter correct email format some@email.com'),
@@ -147,7 +144,6 @@ export default function Page() {
               fontSize: 'clamp(1.8rem, 8vw, 2rem)', 
               textAlign: 'center',
               fontWeight: 700,
-              color: colorPalette.text.primary,
               marginBottom: '8px'
             }}
           >
@@ -157,7 +153,6 @@ export default function Page() {
             variant="body2" 
             sx={{ 
               textAlign: 'center', 
-              color: colorPalette.text.secondary,
               marginBottom: '16px'
             }}
           >
@@ -169,7 +164,7 @@ export default function Page() {
               variant="body2"
               sx={{
                 textAlign: 'center',
-                color: colorPalette.text.error,
+                color: (theme) => theme.palette.error.main,
                 marginBottom: '16px'
               }}
             >
@@ -223,7 +218,7 @@ export default function Page() {
                 type="button"
                 onClick={handleClickOpen}
                 variant="body2"
-                sx={{ alignSelf: 'center', color: colorPalette.text.secondary }}
+                sx={{ alignSelf: 'center' }}
               >
                 Forgot your password?
               </Link>
@@ -232,7 +227,7 @@ export default function Page() {
           <StyledDivider>or</StyledDivider>
 
           <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
-            <Typography sx={{ color: colorPalette.text.secondary }}>
+            <Typography>
               Don&apos;t have an account?
             </Typography>
             <StyledLink href="/register" variant="body2">

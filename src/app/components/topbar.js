@@ -68,7 +68,7 @@ export default function TopBar({ open, onToggle }) {
                         onClick={handleProfileMenuOpen}
                     >
                         <Avatar sx={{ width: 32, height: 32 }}>
-                            {user?.name?.charAt(0) || 'U'}
+                            {user?.firstName?.charAt(0) || 'U'}
                         </Avatar>
                     </IconButton>
                 </Box>
