@@ -31,7 +31,6 @@ const ClassScheduleForm = ({ open, onClose, facultyId, onSuccess, classrooms }) 
   const [departments, setDepartments] = useState([]);
   const [courses, setCourses] = useState([]);
   const [levels, setLevels] = useState([]);
-  // const [classrooms, setClassrooms] = useState([]);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -70,22 +69,6 @@ const ClassScheduleForm = ({ open, onClose, facultyId, onSuccess, classrooms }) 
 
     fetchDependentData();
   }, [formData.departmentId]);
-
-  // useEffect(() => {
-  //   const fetchClassrooms = async () => {
-  //     if (facultyId) {
-  //       try {
-  //         const classroomsRes = await classroomService.getByFaculty(facultyId);
-  //         console.log('Classrooms:', classroomsRes?.data);
-  //         setClassrooms(classroomsRes?.data !== undefined ? [] : classroomsRes?.data);
-  //       } catch (error) {
-  //         console.error('Error fetching classrooms:', error);
-  //       }
-  //     }
-  //   };
-
-  //   fetchClassrooms();
-  // }, [facultyId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

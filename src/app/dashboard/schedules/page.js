@@ -38,12 +38,10 @@ const SchedulePage = () => {
           setLecturers(lecturerResponse.data);
         }
 
-        // Load faculties when component mounts
-        if (tabValue === 1) {
-          await loadFaculties();
-        } else if (tabValue === 0) {
-          await loadClassSchedules();
-        }
+        await Promise.all([
+          loadFaculties(),
+          loadClassSchedules()
+        ]);
       } catch (error) {
         console.error('Error fetching initial data:', error);
       }
