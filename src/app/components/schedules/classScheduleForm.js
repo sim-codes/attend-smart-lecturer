@@ -15,7 +15,7 @@ import { classScheduleService, lecturerService, departmentService, courseService
 
 const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
-const ClassScheduleForm = ({ open, onClose, facultyId, onSuccess }) => {
+const ClassScheduleForm = ({ open, onClose, facultyId, onSuccess, classrooms }) => {
   const [formData, setFormData] = useState({
     dayOfWeek: '',
     startTime: '',
@@ -31,7 +31,7 @@ const ClassScheduleForm = ({ open, onClose, facultyId, onSuccess }) => {
   const [departments, setDepartments] = useState([]);
   const [courses, setCourses] = useState([]);
   const [levels, setLevels] = useState([]);
-  const [classrooms, setClassrooms] = useState([]);
+  // const [classrooms, setClassrooms] = useState([]);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -40,8 +40,6 @@ const ClassScheduleForm = ({ open, onClose, facultyId, onSuccess }) => {
           lecturerService.getAllLecturers(),
           departmentService.getAllDepartments()
         ]);
-        console.log('lecturersRes', lecturersRes);
-        console.log('departmentsRes', departmentsRes);
         setLecturers(lecturersRes?.data);
         setDepartments(departmentsRes?.data);
       } catch (error) {
@@ -60,8 +58,10 @@ const ClassScheduleForm = ({ open, onClose, facultyId, onSuccess }) => {
             courseService.getAllCoursesByDepartment(formData.departmentId),
             levelService.getAllLevels(formData.departmentId)
           ]);
-          setCourses(coursesRes?.data);
-          setLevels(levelsRes?.data);
+          if (coursesRes.success) {
+            setCourses(coursesRes.data.courses);
+            setLevels(levelsRes?.data);
+          }
         } catch (error) {
           console.error('Error fetching dependent data:', error);
         }
@@ -71,20 +71,21 @@ const ClassScheduleForm = ({ open, onClose, facultyId, onSuccess }) => {
     fetchDependentData();
   }, [formData.departmentId]);
 
-  useEffect(() => {
-    const fetchClassrooms = async () => {
-      if (facultyId) {
-        try {
-          const classroomsRes = await classroomService.getByFaculty(facultyId);
-          setClassrooms(classroomsRes);
-        } catch (error) {
-          console.error('Error fetching classrooms:', error);
-        }
-      }
-    };
+  // useEffect(() => {
+  //   const fetchClassrooms = async () => {
+  //     if (facultyId) {
+  //       try {
+  //         const classroomsRes = await classroomService.getByFaculty(facultyId);
+  //         console.log('Classrooms:', classroomsRes?.data);
+  //         setClassrooms(classroomsRes?.data !== undefined ? [] : classroomsRes?.data);
+  //       } catch (error) {
+  //         console.error('Error fetching classrooms:', error);
+  //       }
+  //     }
+  //   };
 
-    fetchClassrooms();
-  }, [facultyId]);
+  //   fetchClassrooms();
+  // }, [facultyId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -168,7 +169,7 @@ const ClassScheduleForm = ({ open, onClose, facultyId, onSuccess }) => {
                 onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
               >
                 {courses.map((course) => (
-                  <MenuItem key={course.id} value={course.id}>{course.name}</MenuItem>
+                  <MenuItem key={course.id} value={course.id}>{course.title}</MenuItem>
                 ))}
               </TextField>
             </Grid>
@@ -214,7 +215,7 @@ const ClassScheduleForm = ({ open, onClose, facultyId, onSuccess }) => {
                 onChange={(e) => setFormData({ ...formData, lecturerId: e.target.value })}
               >
                 {lecturers.map((lecturer) => (
-                  <MenuItem key={lecturer.id} value={lecturer.id}>{lecturer.name}</MenuItem>
+                  <MenuItem key={lecturer.userId} value={lecturer.userId}>{lecturer.firstName} {lecturer.lastName}</MenuItem>
                 ))}
               </TextField>
             </Grid>

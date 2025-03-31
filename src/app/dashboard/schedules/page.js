@@ -244,6 +244,22 @@ const SchedulePage = () => {
         <Tab label="Classrooms" />
       </Tabs>
 
+      {/* Faculty Dropdown */}
+      <FormControl fullWidth sx={{ mb: 2 }}>
+          <InputLabel>Select Faculty</InputLabel>
+          <Select
+            value={selectedFaculty || ''}
+            label="Select Faculty"
+            onChange={(e) => handleFacultyChange(e.target.value)}
+          >
+            {faculties.map(faculty => (
+              <MenuItem key={faculty.id} value={faculty.id}>
+                {faculty.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
       {tabValue === 0 && (
         <Box>
           <Button 
@@ -266,22 +282,6 @@ const SchedulePage = () => {
 
       {tabValue === 1 && (
         <Box>
-          {/* Faculty Dropdown */}
-          <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel>Select Faculty</InputLabel>
-            <Select
-              value={selectedFaculty || ''}
-              label="Select Faculty"
-              onChange={(e) => handleFacultyChange(e.target.value)}
-            >
-              {faculties.map(faculty => (
-                <MenuItem key={faculty.id} value={faculty.id}>
-                  {faculty.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
           {selectedFaculty && (
             <Box>
               <Button
@@ -323,7 +323,8 @@ const SchedulePage = () => {
       <ClassScheduleForm
         open={showScheduleForm}
         onClose={() => setShowScheduleForm(false)}
-        onSuccess={loadClassSchedules}
+        onSuccess={ loadClassSchedules }
+        classrooms={classrooms[selectedFaculty]?.data || []}
       />
     </Paper>
   );
