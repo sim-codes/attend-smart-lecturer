@@ -1,325 +1,315 @@
 "use client";
 
+import { useState } from 'react';
+import { z } from 'zod';
 import Box from '@mui/material/Box';
-import Checkbox from '@mui/material/Checkbox';
-import CssBaseline from '@mui/material/CssBaseline';
-import FormControlLabel from '@mui/material/FormControlLabel';
+import Card from '../components/card';
+import Stack from '@mui/material/Stack';
 import Divider from '@mui/material/Divider';
 import FormLabel from '@mui/material/FormLabel';
-import FormControl from '@mui/material/FormControl';
 import Link from '@mui/material/Link';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import Stack from '@mui/material/Stack';
-import { styled } from '@mui/material/styles';
-import { useState } from 'react';
-import { z } from 'zod';
-import { colorPalette } from '../constants/color';
-import Card from '../components/card';
-import ForgotPassword from '../components/forgot-password';
+import FormControl from '@mui/material/FormControl';
 import StyledButton from '../components/button';
-import { authService } from '@/lib/services';
-import { authUtils } from '@/lib/utils';
+import { styled } from '@mui/material/styles';
 import { useRouter } from 'next/navigation';
+import { authService } from '@/lib/services';
+import { Button } from '@mui/material';
 
-const SignInContainer = styled(Stack)(({ theme }) => ({
+const SignUpContainer = styled(Stack)(({ theme }) => ({
   height: '100vh',
-  minHeight: '100%',
   padding: theme.spacing(2),
-  backgroundColor: colorPalette.background.main,
-  color: colorPalette.text.primary,
+  backgroundColor: theme.palette.background.default,
   [theme.breakpoints.up('sm')]: {
     padding: theme.spacing(4),
   }
 }));
 
-const StyledFormLabel = styled(FormLabel)({
-  color: colorPalette.text.secondary,
-  marginBottom: '4px',
-  fontSize: '0.9rem'
+const steps = ['Profile Image', 'Personal Info', 'Account Details', 'Contact Info'];
+
+const signUpSchema = z.object({
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
+  username: z.string().min(1, 'Username is required'),
+  email: z.string().email('Invalid email format'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  phoneNumber: z.string().min(10, 'Phone number must be at least 10 digits'),
+  // profileImageUrl: z.string().url('Profile image is required')
 });
 
-const StyledTextField = styled(TextField)(({ error }) => ({
-  '& .MuiOutlinedInput-root': {
-    backgroundColor: colorPalette.background.field,
-    '& fieldset': {
-      borderColor: error ? colorPalette.error : 'rgba(255, 255, 255, 0.2)',
-    },
-    '&:hover fieldset': {
-      borderColor: error ? colorPalette.error : colorPalette.primary.light,
-    },
-    '&.Mui-focused fieldset': {
-      borderColor: error ? colorPalette.error : colorPalette.primary.main,
-    },
-  },
-  '& .MuiInputBase-input': {
-    color: colorPalette.text.primary,
-  },
-  '& .MuiFormHelperText-root': {
-    color: colorPalette.error,
-  }
-}));
-
-const StyledLink = styled(Link)({
-  color: colorPalette.primary.light,
-  textDecoration: 'none',
-  fontWeight: 500,
-  '&:hover': {
-    textDecoration: 'underline',
-  }
-});
-
-const StyledDivider = styled(Divider)({
-  '&::before, &::after': {
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  color: colorPalette.text.secondary,
-  margin: '16px 0',
-});
-
-const schema = z.object({
-  firstName: z.string(),
-  lastName: z.string(),
-  email: z.string().email('Enter a valid email address'),
-  username: z.string().min(6, 'Username must be at least 6 characters long.'),
-  password: z.string().min(8, 'Password must be at least 8 characters long.'),
-  profileImageUrl: z.string().url(),
-  phoneNumber: z.string().min(11, 'Your phone number should not be less than 11')
-    .max(11, 'Your phone number should not be greater than 11')
-});
-
-export default function Page() {
-  const [errors, setErrors] = useState({
-    username: '',
-    password: '',
-    message: ''
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  const [open, setOpen] = useState(false);
+export default function SignUpPage() {
   const router = useRouter();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    username: '',
+    email: '',
+    password: '',
+    phoneNumber: '',
+    roles: [
+      'lecturer',
+      'administrator'
+    ],
+    profileImageUrl: ''
+  });
 
-  const handleClickOpen = () => {
-    setOpen(true);
+  const handleImageUpload = async (file) => {
+    setIsUploading(true);
+    try {
+      // const imageUrl = await authService.uploadImage(file);
+      const imageUrl = "image.jpg";
+      setFormData(prev => ({ ...prev, profileImageUrl: imageUrl }));
+      setErrors(prev => ({ ...prev, profileImageUrl: '' }));
+    } catch (error) {
+      setErrors(prev => ({ ...prev, profileImageUrl: 'Failed to upload image' }));
+    } finally {
+      setIsUploading(false);
+    }
   };
 
-  const handleClose = () => {
-    setOpen(false);
+  const validateStep = (step) => {
+    let isValid = true;
+    const newErrors = {};
+
+    switch (step) {
+      case 1:
+        // if (!formData.profileImageUrl) {
+        //   newErrors.profileImageUrl = 'Profile image is required';
+        //   isValid = false;
+        // }
+        break;
+      case 2:
+        if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
+        if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
+        if (!formData.username.trim()) newErrors.username = 'Username is required';
+        break;
+      case 3:
+        if (!formData.email) newErrors.email = 'Email is required';
+        if (!formData.password) newErrors.password = 'Password is required';
+        break;
+      case 4:
+        if (!formData.phoneNumber) newErrors.phoneNumber = 'Phone number is required';
+        break;
+    }
+
+    setErrors(newErrors);
+    return isValid;
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    const formData = {
-      username: data.get('username'),
-      password: data.get('password')
-    };
+  const handleNext = () => {
+    if (validateStep(currentStep)) {
+      setCurrentStep(prev => Math.min(prev + 1, steps.length));
+    }
+  };
 
-    const validation = schema.safeParse(formData);
+  const handlePrevious = () => {
+    setCurrentStep(prev => Math.max(prev - 1, 1));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const validation = signUpSchema.safeParse(formData);
     if (!validation.success) {
-      const fieldErrors = validation.error.format();
+      const formattedErrors = validation.error.format();
       setErrors({
-        username: fieldErrors.username?._errors[0] || '',
-        password: fieldErrors.password?._errors[0] || ''
+        firstName: formattedErrors.firstName?._errors[0],
+        lastName: formattedErrors.lastName?._errors[0],
+        username: formattedErrors.username?._errors[0],
+        email: formattedErrors.email?._errors[0],
+        password: formattedErrors.password?._errors[0],
+        phoneNumber: formattedErrors.phoneNumber?._errors[0],
+        profileImageUrl: formattedErrors.profileImageUrl?._errors[0]
       });
       return;
     }
 
-    // Clear any previous errors
-    setErrors({ username: '', password: '' });
     setIsLoading(true);
-
     try {
-      const result = await authService.login(formData);
-
+      const result = await authService.register(formData);
+      console.log('Register reponse', result);
       if (result.success) {
-        authUtils.setUserData(result.data.user),
-          authUtils.setTokens(result.data.token);
-        router.push('/dashboard');
+        router.push('/login');
       }
     } catch (error) {
-      setErrors({ message: error?.message || 'An error occurred. Please try again.' });
+      setErrors({ message: error?.message || 'Registration failed. Please try again.' });
     } finally {
       setIsLoading(false);
     }
-    return;
   };
 
   return (
-    <div>
-      <CssBaseline enableColorScheme />
-      <SignInContainer direction="column" justifyContent="center" alignItems="center">
-        <Card variant="outlined">
-          <Typography
-            component="h1"
-            variant="h4"
-            sx={{
-              width: '100%',
-              fontSize: 'clamp(1.8rem, 8vw, 2rem)',
-              textAlign: 'center',
-              fontWeight: 700,
-              color: colorPalette.text.primary,
-              marginBottom: '8px'
-            }}
-          >
-            Register
-          </Typography>
-          <Typography
-            variant="body2"
-            sx={{
-              textAlign: 'center',
-              color: colorPalette.text.secondary,
-              marginBottom: '16px'
-            }}
-          >
-            Create an account to procceed
-          </Typography>
+    <SignUpContainer direction="column" justifyContent="center" alignItems="center">
+      <Card variant="outlined">
+        <Typography variant="h4" component="h1" sx={{ textAlign: 'center', mb: 3 }}>
+          Create Your Account
+        </Typography>
 
-          { errors.message && (
-            <Typography
-              variant="body2"
-              sx={{
-                textAlign: 'center',
-                color: colorPalette.text.error,
-                marginBottom: '16px'
-              }}
-            >
-              {errors.message}
-            </Typography>
+        <Box sx={{ mb: 3 }}>
+          {steps.map((label, index) => (
+            <span key={label} style={{ marginRight: '8px', opacity: currentStep > index + 1 ? 1 : 0.5 }}>
+              {label}
+            </span>
+          ))}
+        </Box>
+
+        {errors.message && (
+          <Typography color="error" sx={{ mb: 2 }}>
+            {errors.message}
+          </Typography>
+        )}
+
+        <Box component="form" onSubmit={handleSubmit}>
+          {currentStep === 1 && (
+            <FormControl fullWidth sx={ { mb: 2, display: 'flex', alignItems: 'center', gap: '5px' } }>
+              <Box sx={{ height: '150px', width: '150px', backgroundColor: 'white', borderRadius: '100%', backgroundImage: 'url(/avatar.jpg)', backgroundSize: 'cover' }} />
+              <FormLabel>Profile Image</FormLabel>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleImageUpload(e.target.files[0])}
+                disabled={isUploading}
+                style={{ display: 'none' }}
+                id="image-upload"
+              />
+              <label htmlFor="image-upload">
+                <Button
+                  component="span"
+                  variant="outlined"
+                  disabled={isUploading}
+                >
+                  {isUploading ? 'Uploading...' : 'Upload Image'}
+                </Button>
+              </label>
+              {formData.profileImageUrl && (
+                <Typography variant="caption" sx={{ mt: 1 }}>
+                  Image uploaded successfully
+                </Typography>
+              )}
+              {errors.profileImageUrl && (
+                <Typography color="error" variant="caption">
+                  {errors.profileImageUrl}
+                </Typography>
+              )}
+            </FormControl>
           )}
 
-
-          <Box component="form" onSubmit={ handleSubmit } noValidate sx={ { display: 'flex', flexDirection: 'column', width: '100%', gap: 2.5 } }>
-
-            <div className='flex gap-x-4'>
-            <FormControl>
-              <StyledFormLabel htmlFor="firstName">First Name</StyledFormLabel>
-              <StyledTextField
-                error={!!errors.firstName}
-                helperText={errors.firstName}
-                id="firstName"
-                type="text"
-                name="firstName"
-                placeholder="Segun"
-                required
-                fullWidth
-                variant="outlined"
-                size="medium"
-              />
+          {currentStep === 2 && (
+            <>
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <FormLabel>First Name</FormLabel>
+                <TextField
+                  value={formData.firstName}
+                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                  error={!!errors.firstName}
+                  helperText={errors.firstName}
+                />
               </FormControl>
-
-              <FormControl>
-              <StyledFormLabel htmlFor="lastName">Last Name</StyledFormLabel>
-              <StyledTextField
-                error={!!errors.lastName}
-                helperText={errors.lastName}
-                id="lastName"
-                type="text"
-                name="lastName"
-                placeholder="Michael"
-                required
-                fullWidth
-                variant="outlined"
-                size="medium"
-              />
-            </FormControl>
-            </div>
-
-            <div className='flex gap-x-4'>
-            <FormControl>
-              <StyledFormLabel htmlFor="username">Username</StyledFormLabel>
-              <StyledTextField
-                error={!!errors.username}
-                helperText={errors.username}
-                id="username"
-                type="text"
-                name="username"
-                placeholder="Simcodes"
-                required
-                fullWidth
-                variant="outlined"
-                size="medium"
-              />
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <FormLabel>Last Name</FormLabel>
+                <TextField
+                  value={formData.lastName}
+                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                  error={!!errors.lastName}
+                  helperText={errors.lastName}
+                />
               </FormControl>
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <FormLabel>Username</FormLabel>
+                <TextField
+                  value={formData.username}
+                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                  error={!!errors.username}
+                  helperText={errors.username}
+                />
+              </FormControl>
+            </>
+          )}
 
-              <FormControl>
-              <StyledFormLabel htmlFor="phoneNumber">Phone Number</StyledFormLabel>
-              <StyledTextField
+          {currentStep === 3 && (
+            <>
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <FormLabel>Email</FormLabel>
+                <TextField
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  error={!!errors.email}
+                  helperText={errors.email}
+                />
+              </FormControl>
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <FormLabel>Password</FormLabel>
+                <TextField
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  error={!!errors.password}
+                  helperText={errors.password}
+                />
+              </FormControl>
+            </>
+          )}
+
+          {currentStep === 4 && (
+            <FormControl fullWidth sx={{ mb: 2 }}>
+              <FormLabel>Phone Number</FormLabel>
+              <TextField
+                type="tel"
+                value={formData.phoneNumber}
+                onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
                 error={!!errors.phoneNumber}
                 helperText={errors.phoneNumber}
-                id="phoneNumber"
-                type="text"
-                name="phoneNumber"
-                placeholder="0801234567809"
-                required
-                fullWidth
-                variant="outlined"
-                size="medium"
               />
             </FormControl>
-            </div>
+          )}
 
-            <FormControl>
-              <StyledFormLabel htmlFor="email">Email</StyledFormLabel>
-              <StyledTextField
-                error={!!errors.username}
-                helperText={errors.username}
-                id="email"
-                type="text"
-                name="email"
-                placeholder="Simcodes"
-                required
-                fullWidth
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+            {currentStep > 1 && (
+              <StyledButton
                 variant="outlined"
-                size="medium"
-              />
-            </FormControl>
-
-            <FormControl>
-              <StyledFormLabel htmlFor="password">Password</StyledFormLabel>
-              <StyledTextField
-                error={!!errors.password}
-                helperText={errors.password}
-                name="password"
-                placeholder="••••••"
-                type="password"
-                id="password"
-                autoComplete="current-password"
-                required
-                fullWidth
-                variant="outlined"
-                size="medium"
-              />
-            </FormControl>
-
-            <ForgotPassword open={ open } handleClose={ handleClose } />
-
-            <StyledButton type="submit" fullWidth variant="contained" disabled={isLoading}>
-              {isLoading ? "Signing in…" : "Sign in"}
-            </StyledButton>
-
-            <Link
-                component="button"
-                type="button"
-                onClick={handleClickOpen}
-                variant="body2"
-                sx={{ alignSelf: 'center', color: colorPalette.text.secondary }}
+                onClick={handlePrevious}
+                disabled={currentStep === 1 || isLoading}
               >
-                Forgot your password?
-              </Link>
-          </Box>
+                Back
+              </StyledButton>
+            )}
 
-          <StyledDivider>or</StyledDivider>
-
-          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
-            <Typography sx={{ color: colorPalette.text.secondary }}>
-              Already have an account?
-            </Typography>
-            <StyledLink href="/login" variant="body2">
-              Login
-            </StyledLink>
+            {currentStep < steps.length ? (
+              <StyledButton
+                variant="contained"
+                onClick={handleNext}
+                disabled={isLoading || isUploading}
+                sx={{ ml: 'auto' }}
+              >
+                Next
+              </StyledButton>
+            ) : (
+              <StyledButton
+                type="submit"
+                variant="contained"
+                disabled={isLoading}
+                sx={{ ml: 'auto' }}
+              >
+                {isLoading ? 'Creating Account...' : 'Sign Up'}
+              </StyledButton>
+            )}
           </Box>
-        </Card>
-      </SignInContainer>
-    </div>
+        </Box>
+
+        <Divider sx={{ my: 3 }} />
+
+        <Typography variant="body2" sx={{ textAlign: 'center' }}>
+          Already have an account?{' '}
+          <Link href="/login" underline="hover">
+            Sign in
+          </Link>
+        </Typography>
+      </Card>
+    </SignUpContainer>
   );
 }

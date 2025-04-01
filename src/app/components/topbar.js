@@ -24,7 +24,7 @@ import MenuOpenIcon from '@mui/icons-material/MenuOpen';
 export default function TopBar({ open, onToggle }) {
     const router = useRouter();
     const [anchorEl, setAnchorEl] = useState(null);
-    const [user, setUser] = useState(null);
+    const user = authUtils.getUserData();
 
     const handleProfileMenuOpen = (event) => {
         setAnchorEl(event.currentTarget);

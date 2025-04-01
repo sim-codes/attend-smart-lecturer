@@ -1,9 +1,7 @@
 "use client";
 
 import Box from '@mui/material/Box';
-import Checkbox from '@mui/material/Checkbox';
 import CssBaseline from '@mui/material/CssBaseline';
-import FormControlLabel from '@mui/material/FormControlLabel';
 import Divider from '@mui/material/Divider';
 import FormLabel from '@mui/material/FormLabel';
 import FormControl from '@mui/material/FormControl';
@@ -29,39 +27,6 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
   color: theme.palette.text.primary,
   [theme.breakpoints.up('sm')]: {
     padding: theme.spacing(4),
-  }
-}));
-
-const StyledFormLabel = styled(FormLabel)(({ theme }) => ({
-  color: theme.palette.text.secondary,
-  marginBottom: '4px',
-  fontSize: '0.9rem'
-}));
-
-const StyledTextField = styled(TextField)(({ theme, error }) => ({
-  '& .MuiOutlinedInput-root': {
-    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
-    '& fieldset': {
-      borderColor: error ? theme.palette.error.main : theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
-    },
-    '&:hover fieldset': {
-      borderColor: error ? theme.palette.error.main : theme.palette.primary.light,
-    },
-    '&.Mui-focused fieldset': {
-      borderColor: error ? theme.palette.error.main : theme.palette.primary.main,
-    },
-  },
-  '& .MuiFormHelperText-root': {
-    color: theme.palette.error.main,
-  }
-}));
-
-const StyledLink = styled(Link)(({ theme }) => ({
-  color: theme.palette.primary.light,
-  textDecoration: 'none',
-  fontWeight: 500,
-  '&:hover': {
-    textDecoration: 'underline',
   }
 }));
 
@@ -175,8 +140,8 @@ export default function Page() {
 
           <Box component="form" onSubmit={handleSubmit} noValidate sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 2.5 }}>
             <FormControl>
-              <StyledFormLabel htmlFor="email">Email</StyledFormLabel>
-              <StyledTextField
+              <FormLabel htmlFor="email">Email</FormLabel>
+              <TextField
                 error={!!errors.email}
                 helperText={errors.email}
                 id="email"
@@ -191,8 +156,8 @@ export default function Page() {
             </FormControl>
 
             <FormControl>
-              <StyledFormLabel htmlFor="password">Password</StyledFormLabel>
-              <StyledTextField
+              <FormLabel htmlFor="password">Password</FormLabel>
+              <TextField
                 error={!!errors.password}
                 helperText={errors.password}
                 name="password"
@@ -230,9 +195,9 @@ export default function Page() {
             <Typography>
               Don&apos;t have an account?
             </Typography>
-            <StyledLink href="/register" variant="body2">
+            <Link href="/register" variant="body2">
               Sign up
-            </StyledLink>
+            </Link>
           </Box>
         </Card>
       </SignInContainer>
